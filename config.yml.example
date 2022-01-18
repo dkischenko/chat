@@ -1,12 +1,12 @@
-is_debug: true
 listen:
   ip: 0.0.0.0
   port: 1000
-mongodb:
+storage:
   host: localhost
   port: 27017
   username: root
   password: secret
   database: chat
-  collection: users
-  auth_db: admin
+  options:
+    collection: users
+    auth_db: admin

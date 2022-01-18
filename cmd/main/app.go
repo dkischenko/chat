@@ -18,13 +18,13 @@ func main() {
 	cfg := config.GetConfig()
 	//storage := database.NewStorage(l)
 	l.Info("Create database connection")
-	mongoDBCfg := cfg.MongoDB
+	mongoDBCfg := cfg.Storage
 	client, err := mongodb.NewClient(context.Background(), mongoDBCfg.Host, mongoDBCfg.Port, mongoDBCfg.Username,
-		mongoDBCfg.Password, mongoDBCfg.Database, mongoDBCfg.AuthDB)
+		mongoDBCfg.Password, mongoDBCfg.Database, mongoDBCfg.Options.AuthDB)
 	if err != nil {
 		panic(err)
 	}
-	storage := database.NewStorage(client, mongoDBCfg.Collection, l)
+	storage := database.NewStorage(client, mongoDBCfg.Options.Collection, l)
 	service := user.NewService(l, storage)
 	l.Info("Register user handler")
 	handler := user.NewHandler(l, service)

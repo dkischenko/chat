@@ -5,8 +5,3 @@ type User struct {
 	Username     string `json:"userName" bson:"username"`
 	PasswordHash string `json:"passwordHash" bson:"password"`
 }
-
-type UserDTO struct {
-	Username string `json:"userName" validate:"required,lowercase,alpha"`
-	Password string `json:"password" validate:"required,alphanum"`
-}
