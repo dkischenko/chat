@@ -9,13 +9,15 @@ import (
 	"github.com/dkischenko/chat/pkg/database/mongodb"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/julienschmidt/httprouter"
+	"os"
 )
 
 func main() {
 	l := logger.GetLogger()
 	l.Info("Create router")
 	router := httprouter.New()
-	cfg := config.GetConfig()
+	configPath := os.Getenv("CONFIG")
+	cfg := config.GetConfig(configPath)
 	//storage := database.NewStorage(l)
 	l.Info("Create database connection")
 	mongoDBCfg := cfg.Storage

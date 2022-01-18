@@ -27,12 +27,12 @@ type Config struct {
 var instance *Config
 var once sync.Once
 
-func GetConfig() *Config {
+func GetConfig(cfgPath string) *Config {
 	once.Do(func() {
 		l := logger.GetLogger()
 		l.Info("Start read application config")
 		instance = &Config{}
-		if err := cleanenv.ReadConfig("config.yml", instance); err != nil {
+		if err := cleanenv.ReadConfig(cfgPath, instance); err != nil {
 			help, errGD := cleanenv.GetDescription(instance, nil)
 			if errGD != nil {
 				l.Fatalf("GetDescription error: %s", errGD)
