@@ -24,21 +24,22 @@ type Config struct {
 	} `yaml:"storage"`
 }
 
-var instance *Config
-var once sync.Once
-
-func GetConfig(cfgPath string) *Config {
+func GetConfig(cfgPath string, instance *Config) *Config {
+	var once sync.Once
 	once.Do(func() {
-		l := logger.GetLogger()
-		l.Info("Start read application config")
+		l, err := logger.GetLogger()
+		if err != nil {
+			panic("Error create logger")
+		}
+		l.Entry.Info("Start read application config")
 		instance = &Config{}
 		if err := cleanenv.ReadConfig(cfgPath, instance); err != nil {
 			help, errGD := cleanenv.GetDescription(instance, nil)
 			if errGD != nil {
-				l.Fatalf("GetDescription error: %s", errGD)
+				l.Entry.Fatalf("GetDescription error: %s", errGD)
 			}
-			l.Info(help)
-			l.Fatal(err)
+			l.Entry.Info(help)
+			l.Entry.Fatal(err)
 		}
 	})
 

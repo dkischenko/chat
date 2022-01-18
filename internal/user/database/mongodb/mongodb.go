@@ -27,17 +27,17 @@ func NewStorage(database *mongo.Database, collection string, logger *logger.Logg
 func (db *mongodb) Create(ctx context.Context, user *user.User) (id string, err error) {
 	result, err := db.collection.InsertOne(ctx, user)
 	if err != nil {
-		db.logger.Errorf("failed insert data with error: %v", err)
+		db.logger.Entry.Errorf("failed insert data with error: %v", err)
 		return "", err
 	}
 
 	oid, ok := result.InsertedID.(primitive.ObjectID)
 	if ok {
-		db.logger.Infof("user ID mongo: %v", oid.Hex())
+		db.logger.Entry.Infof("user ID mongo: %v", oid.Hex())
 		return oid.Hex(), nil
 	}
 
-	db.logger.Errorf("failed to convert objectid to hex with oid: %s", oid)
+	db.logger.Entry.Errorf("failed to convert objectid to hex with oid: %s", oid)
 	return "", fmt.Errorf("failed to convert objectid to hex with oid: %s", oid)
 }
 
@@ -53,7 +53,7 @@ func (db *mongodb) FindOne(ctx context.Context, username string) (u *user.User, 
 	}
 
 	if err = result.Decode(&u); err != nil {
-		return u, fmt.Errorf("")
+		return u, fmt.Errorf("error decode data with error: %s", err)
 	}
 
 	return u, nil

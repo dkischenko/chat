@@ -12,8 +12,8 @@ import (
 )
 
 func Run(router *httprouter.Router, logger *logger.Logger, config *config.Config) {
-	logger.Info("start application")
-	logger.Info("listen TCP")
+	logger.Entry.Info("start application")
+	logger.Entry.Info("listen TCP")
 	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%s", config.Listen.Ip, config.Listen.Port))
 
 	if err != nil {
@@ -25,6 +25,6 @@ func Run(router *httprouter.Router, logger *logger.Logger, config *config.Config
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-	logger.Infof("server listening address %s:%s", config.Listen.Ip, config.Listen.Port)
+	logger.Entry.Infof("server listening address %s:%s", config.Listen.Ip, config.Listen.Port)
 	log.Fatal(server.Serve(listener))
 }

@@ -13,13 +13,16 @@ import (
 )
 
 func main() {
-	l := logger.GetLogger()
-	l.Info("Create router")
+	l, err := logger.GetLogger()
+	if err != nil {
+		panic(err)
+	}
+	l.Entry.Info("Create router")
 	router := httprouter.New()
 	configPath := os.Getenv("CONFIG")
-	cfg := config.GetConfig(configPath)
+	cfg := config.GetConfig(configPath, &config.Config{})
 	//storage := database.NewStorage(l)
-	l.Info("Create database connection")
+	l.Entry.Info("Create database connection")
 	mongoDBCfg := cfg.Storage
 	client, err := mongodb.NewClient(context.Background(), mongoDBCfg.Host, mongoDBCfg.Port, mongoDBCfg.Username,
 		mongoDBCfg.Password, mongoDBCfg.Database, mongoDBCfg.Options.AuthDB)
@@ -28,7 +31,7 @@ func main() {
 	}
 	storage := database.NewStorage(client, mongoDBCfg.Options.Collection, l)
 	service := user.NewService(l, storage)
-	l.Info("Register user handler")
+	l.Entry.Info("Register user handler")
 	handler := user.NewHandler(l, service)
 	handler.Register(router)
 

@@ -21,7 +21,7 @@ func NewService(logger *logger.Logger, storage Repository) *service {
 func (s *service) Create(ctx context.Context, user UserDTO) (id string, err error) {
 	hashPassword, err := hasher.HashPassword(user.Password)
 	if err != nil {
-		s.logger.Errorf("troubles with hashing password: %s", user.Password)
+		s.logger.Entry.Errorf("troubles with hashing password: %s", user.Password)
 		return "", err
 	}
 	usr := &User{
@@ -41,14 +41,14 @@ func (s *service) Create(ctx context.Context, user UserDTO) (id string, err erro
 func (s *service) Login(ctx context.Context, username string) (string, error) {
 	u, err := s.storage.FindOne(ctx, username)
 	if err != nil {
-		s.logger.Errorf("failed find user with error: %s", err)
+		s.logger.Entry.Errorf("failed find user with error: %s", err)
 	}
 
 	// @todo: store user to context
 
 	hash, err := hasher.HashPassword(u.Username + u.ID)
 	if err != nil {
-		s.logger.Errorf("problems with hashing user data: %s", err)
+		s.logger.Entry.Errorf("problems with hashing user data: %s", err)
 	}
 
 	return hash, nil

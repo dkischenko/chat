@@ -1,4 +1,4 @@
-package mongodb
+package postgres
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 
 func TestNewClient(t *testing.T) {
 	configPath := os.Getenv("CONFIG")
-	cfg := config.GetConfig(configPath, &config.Config{})
+	cfg := config.GetConfig(configPath)
 	storage := cfg.Storage
 	_, err := NewClient(context.Background(), storage.Host, storage.Port, storage.Username,
-		storage.Password, storage.Database, storage.Options.AuthDB)
+		storage.Password, storage.Database)
 	if err != nil {
 		t.Errorf("Can not connect to Postgres database due error: %s", err)
 	}

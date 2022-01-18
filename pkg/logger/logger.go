@@ -9,15 +9,13 @@ import (
 	"runtime"
 )
 
-var entry *logrus.Entry
-
 type writerHook struct {
 	Writer    []io.Writer
 	LogLevels []logrus.Level
 }
 
 type Logger struct {
-	*logrus.Entry
+	Entry *logrus.Entry
 }
 
 func (hook *writerHook) Fire(entry *logrus.Entry) error {
@@ -37,11 +35,7 @@ func (hook *writerHook) Levels() []logrus.Level {
 	return hook.LogLevels
 }
 
-func GetLogger() *Logger {
-	return &Logger{entry}
-}
-
-func init() {
+func GetLogger() (logger *Logger, err error) {
 	l := logrus.New()
 	l.SetReportCaller(true)
 	l.Formatter = &logrus.TextFormatter{
@@ -51,18 +45,16 @@ func init() {
 		},
 		DisableColors: true,
 		FullTimestamp: true,
-		//		TimestampFormat:        "2006-01-02 20:00:00",
-		//		DisableLevelTruncation: true,
 	}
 
-	err := os.MkdirAll("logs", 0755)
+	err = os.MkdirAll("logs", 0755)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	allFile, err := os.OpenFile("logs/all.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	l.SetOutput(io.Discard)
@@ -73,6 +65,5 @@ func init() {
 
 	l.SetLevel(logrus.TraceLevel)
 
-	logrus.NewEntry(l)
-	entry = logrus.NewEntry(l)
+	return &Logger{Entry: logrus.NewEntry(l)}, nil
 }
