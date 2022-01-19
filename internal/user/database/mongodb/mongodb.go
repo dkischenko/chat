@@ -12,7 +12,6 @@ import (
 )
 
 type mongodb struct {
-	user.Repository
 	logger     *logger.Logger
 	collection *mongo.Collection
 }

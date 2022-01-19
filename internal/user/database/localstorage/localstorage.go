@@ -9,7 +9,6 @@ import (
 )
 
 type localstorage struct {
-	user.Repository
 	users   []*user.User
 	rwMutex *sync.RWMutex
 	logger  *logger.Logger
