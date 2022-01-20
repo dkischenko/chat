@@ -5,8 +5,8 @@ import (
 	"github.com/dkischenko/chat/internal/app"
 	"github.com/dkischenko/chat/internal/config"
 	"github.com/dkischenko/chat/internal/user"
-	database "github.com/dkischenko/chat/internal/user/database/mongodb"
-	"github.com/dkischenko/chat/pkg/database/mongodb"
+	database "github.com/dkischenko/chat/internal/user/database/postgres"
+	"github.com/dkischenko/chat/pkg/database/postgres"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/julienschmidt/httprouter"
 	"os"
@@ -21,15 +21,22 @@ func main() {
 	router := httprouter.New()
 	configPath := os.Getenv("CONFIG")
 	cfg := config.GetConfig(configPath, &config.Config{})
-	//storage := database.NewStorage(l)
 	l.Entry.Info("Create database connection")
-	mongoDBCfg := cfg.Storage
-	client, err := mongodb.NewClient(context.Background(), mongoDBCfg.Host, mongoDBCfg.Port, mongoDBCfg.Username,
-		mongoDBCfg.Password, mongoDBCfg.Database, mongoDBCfg.Options.AuthDB)
+	//storage := database.NewStorage(l)
+	//mongoDBCfg := cfg.Storage
+	//client, err := mongodb.NewClient(context.Background(), mongoDBCfg.Host, mongoDBCfg.Port, mongoDBCfg.Username,
+	//	mongoDBCfg.Password, mongoDBCfg.Database, mongoDBCfg.Options.AuthDB)
+	//if err != nil {
+	//	panic(err)
+	//}
+	//storage := database.NewStorage(client, mongoDBCfg.Options.Collection, l)
+	storageCfg := cfg.Storage
+	client, err := postgres.NewClient(context.Background(), storageCfg.Host, storageCfg.Port, storageCfg.Username,
+		storageCfg.Password, storageCfg.Database)
 	if err != nil {
 		panic(err)
 	}
-	storage := database.NewStorage(client, mongoDBCfg.Options.Collection, l)
+	storage := database.NewStorage(client, l)
 	service := user.NewService(l, storage)
 	l.Entry.Info("Register user handler")
 	handler := user.NewHandler(l, service)
