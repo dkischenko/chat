@@ -23,8 +23,8 @@ func NewStorage(logger *logger.Logger) user.Repository {
 }
 
 func (ls *localstorage) Create(ctx context.Context, user *user.User) (id string, err error) {
-	ls.rwMutex.RLock()
-	defer ls.rwMutex.RUnlock()
+	ls.rwMutex.Lock()
+	defer ls.rwMutex.Unlock()
 	user.ID = uuid.GetUUID()
 	ls.users = append(ls.users, user)
 
