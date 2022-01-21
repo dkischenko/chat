@@ -31,7 +31,7 @@ func main() {
 		cfg.Storage.Options.AuthDB = os.Getenv("DB_AUTHDB")
 		cfg.Storage.Options.Collection = os.Getenv("DB_COLLECTION")
 		cfg.Listen.Ip = os.Getenv("APP_IP")
-		cfg.Listen.Port = os.Getenv("APP_PORT")
+		cfg.Listen.Port = os.Getenv("PORT")
 	} else {
 		cfg = config.GetConfig(configPath, &config.Config{})
 	}
