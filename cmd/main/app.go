@@ -20,25 +20,18 @@ func main() {
 	l.Entry.Info("Create router")
 	router := httprouter.New()
 	var cfg *config.Config
-	var dbHost,
-		dbPort,
-		dbUsername,
-		dbPassword,
-		dbDatabase string
 
-	if configPath := os.Getenv("CONFIG"); configPath != "" {
-		cfg = config.GetConfig(configPath, &config.Config{})
-		dbHost = cfg.Storage.Host
-		dbPort = cfg.Storage.Port
-		dbUsername = cfg.Storage.Username
-		dbPassword = cfg.Storage.Password
-		dbDatabase = cfg.Storage.Database
+	if configPath := os.Getenv("CONFIG"); configPath == "" {
+		cfg = &config.Config{}
+		cfg.Storage.Host = os.Getenv("DB_HOST")
+		cfg.Storage.Port = os.Getenv("DB_PORT")
+		cfg.Storage.Username = os.Getenv("DB_USERNAME")
+		cfg.Storage.Password = os.Getenv("DB_PASSWORD")
+		cfg.Storage.Database = os.Getenv("DB_DATABASE")
+		cfg.Storage.Options.AuthDB = os.Getenv("DB_AUTHDB")
+		cfg.Storage.Options.Collection = os.Getenv("DB_COLLECTION")
 	} else {
-		dbHost = os.Getenv("DB_HOST")
-		dbPort = os.Getenv("DB_PORT")
-		dbUsername = os.Getenv("DB_USERNAME")
-		dbPassword = os.Getenv("DB_PASSWORD")
-		dbDatabase = os.Getenv("DB_DATABASE")
+		cfg = config.GetConfig(configPath, &config.Config{})
 	}
 	l.Entry.Info("Create database connection")
 	//storage := database.NewStorage(l)
@@ -49,7 +42,8 @@ func main() {
 	//	panic(err)
 	//}
 	//storage := database.NewStorage(client, mongoDBCfg.Options.Collection, l)
-	client, err := postgres.NewClient(context.Background(), dbHost, dbPort, dbUsername, dbPassword, dbDatabase)
+	client, err := postgres.NewClient(context.Background(), cfg.Storage.Host, cfg.Storage.Port, cfg.Storage.Username,
+		cfg.Storage.Password, cfg.Storage.Database)
 	if err != nil {
 		panic(err)
 	}
