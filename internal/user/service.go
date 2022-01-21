@@ -38,17 +38,22 @@ func (s *service) Create(ctx context.Context, user UserDTO) (id string, err erro
 	return
 }
 
-func (s *service) Login(ctx context.Context, username string) (string, error) {
-	u, err := s.storage.FindOne(ctx, username)
+func (s *service) Login(ctx context.Context, dto *UserDTO) (string, error) {
+	u, err := s.storage.FindOne(ctx, dto.Username)
 	if err != nil {
 		s.logger.Entry.Errorf("failed find user with error: %s", err)
+		return "", err
 	}
 
+	if !hasher.CheckPasswordHash(u.PasswordHash, dto.Password) {
+		s.logger.Entry.Errorf("user used wrong password: %s", err)
+		return "", err
+	}
 	// @todo: store user to context
-
 	hash, err := hasher.HashPassword(u.Username + u.ID)
 	if err != nil {
 		s.logger.Entry.Errorf("problems with hashing user data: %s", err)
+		return "", err
 	}
 
 	return hash, nil

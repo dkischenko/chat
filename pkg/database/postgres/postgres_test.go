@@ -9,7 +9,7 @@ import (
 
 func TestNewClient(t *testing.T) {
 	configPath := os.Getenv("CONFIG")
-	cfg := config.GetConfig(configPath)
+	cfg := config.GetConfig(configPath, &config.Config{})
 	storage := cfg.Storage
 	_, err := NewClient(context.Background(), storage.Host, storage.Port, storage.Username,
 		storage.Password, storage.Database)

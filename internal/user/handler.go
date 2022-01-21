@@ -124,7 +124,7 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request, params httpr
 	// @todo: end
 
 	//find user and create token
-	hash, err := h.service.Login(r.Context(), uDTO.Username)
+	hash, err := h.service.Login(r.Context(), uDTO)
 	if err != nil {
 		h.logger.Entry.Errorf("error with user login: %v", err)
 	}
