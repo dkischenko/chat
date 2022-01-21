@@ -8,7 +8,7 @@ import (
 
 type Config struct {
 	Listen struct {
-		Ip   string `yaml:"ip" env-default:"127.0.0.1"`
+		Ip   string `yaml:"ip" env-default:"0.0.0.0"`
 		Port string `yaml:"port" env-default:"8080"`
 	} `yaml:"listen"`
 	Storage struct {
