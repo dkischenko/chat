@@ -23,6 +23,8 @@ const (
 	headerValueContentType = "application/json"
 	headerValueXRateLimit  = "X-Rate-Limit"
 	headerXExpiresAfter    = "X-Expires-After"
+	wsHostLocal            = "ws://localhost:1000"
+	wsHostProd             = "ws://floating-ridge-89522.herokuapp.com"
 )
 
 type handler struct {
@@ -159,8 +161,14 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add(headerXExpiresAfter, time.Now().Local().Add(accessTokenTTL).String())
 	w.Header().Add(headerContentType, headerValueContentType)
 	w.WriteHeader(http.StatusOK)
+	var wsHost string
+	if os.Getenv("APP_ENV") == "local" {
+		wsHost = wsHostLocal
+	} else if os.Getenv("APP_ENV") == "prod" {
+		wsHost = wsHostProd
+	}
 	responseBody := UserLoginResponse{
-		Url: "ws://localhost:1000" + chatUrl + "?token=" + hash,
+		Url: wsHost + chatUrl + "?token=" + hash,
 	}
 	if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 		h.logger.Entry.Errorf("Failed to login user: %+v", err)
