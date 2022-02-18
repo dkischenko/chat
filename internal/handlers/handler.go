@@ -1,7 +1,9 @@
 package handlers
 
-import "github.com/julienschmidt/httprouter"
+import (
+	"net/http"
+)
 
 type Handler interface {
-	Register(router *httprouter.Router)
+	Register(router *http.ServeMux)
 }

@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/ilyakaznacheev/cleanenv"
+	"os"
 	"sync"
 )
 
@@ -22,6 +23,9 @@ type Config struct {
 			AuthDB     string `yaml:"auth_db"`
 		} `yaml:"options"`
 	} `yaml:"storage"`
+	Auth struct {
+		AccessTokenTTL string `yaml:"accessTokenTTL"`
+	} `yaml:"auth"`
 }
 
 func GetConfig(cfgPath string, instance *Config) *Config {
@@ -33,15 +37,32 @@ func GetConfig(cfgPath string, instance *Config) *Config {
 		}
 		l.Entry.Info("Start read application config")
 		instance = &Config{}
-		if err := cleanenv.ReadConfig(cfgPath, instance); err != nil {
-			help, errGD := cleanenv.GetDescription(instance, nil)
-			if errGD != nil {
-				l.Entry.Fatalf("GetDescription error: %s", errGD)
+		if cfgPath != "" {
+			if err := cleanenv.ReadConfig(cfgPath, instance); err != nil {
+				help, errGD := cleanenv.GetDescription(instance, nil)
+				if errGD != nil {
+					l.Entry.Fatalf("GetDescription error: %s", errGD)
+				}
+				l.Entry.Info(help)
+				l.Entry.Fatal(err)
 			}
-			l.Entry.Info(help)
-			l.Entry.Fatal(err)
+		} else {
+			populateConfig(instance)
 		}
 	})
 
 	return instance
+}
+
+func populateConfig(cfg *Config) {
+	cfg.Storage.Host = os.Getenv("DB_HOST")
+	cfg.Storage.Port = os.Getenv("DB_PORT")
+	cfg.Storage.Username = os.Getenv("DB_USERNAME")
+	cfg.Storage.Password = os.Getenv("DB_PASSWORD")
+	cfg.Storage.Database = os.Getenv("DB_DATABASE")
+	cfg.Storage.Options.AuthDB = os.Getenv("DB_AUTHDB")
+	cfg.Storage.Options.Collection = os.Getenv("DB_COLLECTION")
+	cfg.Listen.Ip = os.Getenv("APP_IP")
+	cfg.Listen.Port = os.Getenv("PORT")
+	cfg.Auth.AccessTokenTTL = os.Getenv("ACCESSTOKENTTL")
 }

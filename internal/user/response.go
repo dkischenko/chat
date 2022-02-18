@@ -8,3 +8,7 @@ type UserCreateResponse struct {
 type UserLoginResponse struct {
 	Url string `json:"url"`
 }
+
+type UserOnlineResponse struct {
+	Count int `json:"count"`
+}

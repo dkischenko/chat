@@ -51,3 +51,19 @@ func (ls *localstorage) FindAll(ctx context.Context) (u []*user.User, err error)
 	}
 	return ls.users, nil
 }
+
+func (ls *localstorage) UpdateKey(ctx context.Context, user *user.User, m map[string]string) (err error) {
+	panic("Implement me")
+}
+
+func (ls *localstorage) FindByUUID(ctx context.Context, uuid string) (u *user.User, err error) {
+	panic("Implement me")
+}
+
+func (ls *localstorage) UpdateOnline(ctx context.Context, user *user.User, m map[string]bool) (err error) {
+	panic("Implement me")
+}
+
+func (ls *localstorage) GetOnline(ctx context.Context) (count int, err error) {
+	panic("Implement me")
+}
