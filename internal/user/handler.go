@@ -9,7 +9,6 @@ import (
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/go-playground/validator/v10"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -161,7 +160,7 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add(headerContentType, headerValueContentType)
 	w.WriteHeader(http.StatusOK)
 	responseBody := UserLoginResponse{
-		Url: os.Getenv("WS_HOST") + chatUrl + "?token=" + hash,
+		Url: h.config.WS.WsHost + chatUrl + "?token=" + hash,
 	}
 	if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 		h.logger.Entry.Errorf("Failed to login user: %+v", err)
