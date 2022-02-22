@@ -44,7 +44,10 @@ func (s *service) reader(conn *websocket.Conn, ctx context.Context, u *User) (er
 		if err != nil {
 			s.logger.Entry.Errorf("Error with update online status: %s", err)
 		}
-		for connKey, _ := range s.clients {
+
+		s.rwMutex.RLock()
+		defer s.rwMutex.RUnlock()
+		for connKey := range s.clients {
 			if conn != connKey {
 				log.Printf("<%s>: %s", u.Username, string(p))
 			}
