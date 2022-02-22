@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/dkischenko/chat/internal/user"
 	"github.com/dkischenko/chat/pkg/logger"
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"strings"
 )
@@ -72,58 +71,28 @@ func (db *postgres) FindByUUID(ctx context.Context, uuid string) (u *user.User, 
 	return
 }
 
-func (db *postgres) UpdateKey(ctx context.Context, user *user.User, m map[string]string) (err error) {
+func (db *postgres) UpdateKey(ctx context.Context, user *user.User, key string) (err error) {
 	q := `
 		UPDATE users
 		SET key = $1
 		WHERE id = $2
 	`
-	tx, err := db.pool.Begin(ctx)
+	_, err = db.pool.Exec(ctx, q, key, user.ID)
 	if err != nil {
-		db.logger.Entry.Error(err)
-		return nil
-	}
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			db.logger.Entry.Error(err)
-		}
-	}(tx, ctx)
-	_, err = tx.Exec(ctx, q, m["key"], user.ID)
-	if err != nil {
-		db.logger.Entry.Error(err)
-		return nil
-	}
-	if err = tx.Commit(ctx); err != nil {
 		db.logger.Entry.Error(err)
 		return nil
 	}
 	return
 }
 
-func (db *postgres) UpdateOnline(ctx context.Context, user *user.User, m map[string]bool) (err error) {
+func (db *postgres) UpdateOnline(ctx context.Context, user *user.User, isOnline bool) (err error) {
 	q := `
 		UPDATE users
 		SET is_online = $1
 		WHERE id = $2
 	`
-	tx, err := db.pool.Begin(ctx)
+	_, err = db.pool.Exec(ctx, q, isOnline, user.ID)
 	if err != nil {
-		db.logger.Entry.Error(err)
-		return nil
-	}
-	defer func(tx pgx.Tx, ctx context.Context) {
-		err := tx.Rollback(ctx)
-		if err != nil {
-			db.logger.Entry.Error(err)
-		}
-	}(tx, ctx)
-	_, err = tx.Exec(ctx, q, m["is_online"], user.ID)
-	if err != nil {
-		db.logger.Entry.Error(err)
-		return nil
-	}
-	if err = tx.Commit(ctx); err != nil {
 		db.logger.Entry.Error(err)
 		return nil
 	}

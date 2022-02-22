@@ -58,7 +58,7 @@ func (db *mongodb) FindOne(ctx context.Context, username string) (u *user.User, 
 	return u, nil
 }
 
-func (db *mongodb) UpdateKey(ctx context.Context, user *user.User, m map[string]string) (err error) {
+func (db *mongodb) UpdateKey(ctx context.Context, user *user.User, key string) (err error) {
 	panic("Implement me")
 }
 
@@ -66,7 +66,7 @@ func (db *mongodb) FindByUUID(ctx context.Context, uuid string) (u *user.User, e
 	panic("Implement me")
 }
 
-func (db *mongodb) UpdateOnline(ctx context.Context, user *user.User, m map[string]bool) (err error) {
+func (db *mongodb) UpdateOnline(ctx context.Context, user *user.User, isOnline bool) (err error) {
 	panic("Implement me")
 }
 

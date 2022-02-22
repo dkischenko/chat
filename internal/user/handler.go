@@ -23,19 +23,19 @@ const (
 	headerValueContentType = "application/json"
 	headerValueXRateLimit  = "X-Rate-Limit"
 	headerXExpiresAfter    = "X-Expires-After"
-	wsHostLocal            = "ws://localhost:1000"
-	wsHostProd             = "ws://floating-ridge-89522.herokuapp.com"
 )
 
 type handler struct {
 	logger  *logger.Logger
 	service *service
+	config  *config.Config
 }
 
-func NewHandler(logger *logger.Logger, service *service) handlers.Handler {
+func NewHandler(logger *logger.Logger, service *service, cfg *config.Config) handlers.Handler {
 	return &handler{
 		logger:  logger,
 		service: service,
+		config:  cfg,
 	}
 }
 
@@ -151,9 +151,8 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	}
 	// @todo refactor to service
 	w.Header().Add(headerValueXRateLimit, xRateLimit)
-	configPath := os.Getenv("CONFIG")
-	cfg := config.GetConfig(configPath, &config.Config{})
-	accessTokenTTL, err := time.ParseDuration(cfg.Auth.AccessTokenTTL)
+
+	accessTokenTTL, err := time.ParseDuration(h.config.Auth.AccessTokenTTL)
 	if err != nil {
 		h.logger.Entry.Errorf("Error with access token ttl: %s", err)
 	}
@@ -161,14 +160,8 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add(headerXExpiresAfter, time.Now().Local().Add(accessTokenTTL).String())
 	w.Header().Add(headerContentType, headerValueContentType)
 	w.WriteHeader(http.StatusOK)
-	var wsHost string
-	if os.Getenv("APP_ENV") == "local" {
-		wsHost = wsHostLocal
-	} else if os.Getenv("APP_ENV") == "prod" {
-		wsHost = wsHostProd
-	}
 	responseBody := UserLoginResponse{
-		Url: wsHost + chatUrl + "?token=" + hash,
+		Url: os.Getenv("WS_HOST") + chatUrl + "?token=" + hash,
 	}
 	if err := json.NewEncoder(w).Encode(responseBody); err != nil {
 		h.logger.Entry.Errorf("Failed to login user: %+v", err)
@@ -205,9 +198,9 @@ func (h *handler) ActiveUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *handler) ChatStart(w http.ResponseWriter, r *http.Request) {
-	code := h.isGet(r)
-	if code > 0 {
-		w.WriteHeader(code)
+	httpStatusCode := h.isGet(r)
+	if httpStatusCode > 0 {
+		w.WriteHeader(httpStatusCode)
 		return
 	}
 
@@ -218,30 +211,10 @@ func (h *handler) ChatStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// find user with token
-
-	uuid, err := h.service.ParseToken(token[0])
+	u, httpCode, err := h.service.ChatStart(r.Context(), token[0])
 	if err != nil {
-		h.logger.Entry.Errorf("please, use valid token: %s", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	u, err := h.service.FindByUUID(r.Context(), uuid)
-	if err != nil {
-		h.logger.Entry.Errorf("Please, use valid token: %s.", err)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-
-	if u.Key == "" {
-		h.logger.Entry.Error("May be, your token has been revoked earlier. Please, login again.")
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	ok = h.service.RevokeToken(r.Context(), u)
-	if !ok {
-		h.logger.Entry.Errorf("failed revoke token: %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		h.logger.Entry.Errorf("Error happens: %s", err)
+		w.WriteHeader(httpCode)
 		return
 	}
 

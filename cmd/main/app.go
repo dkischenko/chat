@@ -10,6 +10,7 @@ import (
 	"github.com/dkischenko/chat/pkg/logger"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -23,7 +24,11 @@ func main() {
 	var cfg *config.Config
 
 	configPath := os.Getenv("CONFIG")
-	cfg = config.GetConfig(configPath, &config.Config{})
+	var once sync.Once
+	once.Do(func() {
+		cfg = config.GetConfig(configPath, &config.Config{})
+	})
+
 	l.Entry.Info("Create database connection")
 
 	client, err := postgres.NewClient(context.Background(), cfg.Storage.Host, cfg.Storage.Port, cfg.Storage.Username,
@@ -38,7 +43,7 @@ func main() {
 	}
 	service := user.NewService(l, storage, accessTokenTTL)
 	l.Entry.Info("Register user handler")
-	handler := user.NewHandler(l, service)
+	handler := user.NewHandler(l, service, cfg)
 	handler.Register(router)
 
 	app.Run(router, l, cfg)

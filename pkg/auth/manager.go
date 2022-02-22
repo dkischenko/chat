@@ -45,7 +45,7 @@ func (m *Manager) ParseJWT(tokenString string) (user_id string, err error) {
 	}
 
 	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok || !token.Valid {
+	if !ok || !token.Valid || claims["user_id"] == nil {
 		return "", fmt.Errorf("error get user claims from token")
 	}
 
