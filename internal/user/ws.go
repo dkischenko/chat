@@ -50,6 +50,10 @@ func (s *service) reader(conn *websocket.Conn, ctx context.Context, u *User) (er
 		for connKey := range s.clients {
 			if conn != connKey {
 				log.Printf("<%s>: %s", u.Username, string(p))
+				err := connKey.WriteMessage(messageType, p)
+				if err != nil {
+					s.logger.Entry.Errorf("Error with sending message: %s", err)
+				}
 			}
 		}
 
