@@ -4,6 +4,7 @@ import (
 	"context"
 )
 
+//go:generate mockgen -source=repository.go -destination=mocks/repository_mock.go
 type Repository interface {
 	Create(ctx context.Context, user *User) (id string, err error)
 	FindOne(ctx context.Context, username string) (u *User, err error)

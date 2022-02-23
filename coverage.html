@@ -1,0 +1,605 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>user: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/dkischenko/chat/internal/user/handler.go (80.8%)</option>
+				
+				<option value="file1">github.com/dkischenko/chat/internal/user/service.go (82.4%)</option>
+				
+				<option value="file2">github.com/dkischenko/chat/internal/user/ws.go (0.0%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package user
+
+import (
+        "encoding/json"
+        "fmt"
+        "github.com/dkischenko/chat/internal/config"
+        uerrors "github.com/dkischenko/chat/internal/errors"
+        "github.com/dkischenko/chat/internal/middleware"
+        "github.com/dkischenko/chat/pkg/logger"
+        "github.com/go-playground/validator/v10"
+        "net/http"
+        "time"
+)
+
+const (
+        userUrl                = "/v1/user"
+        userLoginUrl           = "/v1/user/login"
+        userActive             = "/v1/user/active"
+        chatUrl                = "/v1/chat/ws.rtm.start/"
+        xRateLimit             = "50"
+        headerContentType      = "Content-Type"
+        headerValueContentType = "application/json"
+        headerValueXRateLimit  = "X-Rate-Limit"
+        headerXExpiresAfter    = "X-Expires-After"
+)
+
+type handler struct {
+        logger  *logger.Logger
+        service IService
+        config  *config.Config
+}
+
+func NewHandler(logger *logger.Logger, service IService, cfg *config.Config) *handler <span class="cov8" title="1">{
+        return &amp;handler{
+                logger:  logger,
+                service: service,
+                config:  cfg,
+        }
+}</span>
+
+func (h handler) Register(router *http.ServeMux) <span class="cov8" title="1">{
+        createUserHandler := http.HandlerFunc(h.CreateUser)
+        loginUserHandler := http.HandlerFunc(h.LoginUser)
+        activeUserHandler := http.HandlerFunc(h.ActiveUser)
+        chatStartHandler := http.HandlerFunc(h.ChatStart)
+        router.Handle(userUrl, middleware.PanicAndRecover(middleware.Logging(createUserHandler, h.logger), h.logger))
+        router.Handle(userLoginUrl, middleware.PanicAndRecover(middleware.Logging(loginUserHandler, h.logger), h.logger))
+        router.Handle(userActive, middleware.PanicAndRecover(middleware.Logging(activeUserHandler, h.logger), h.logger))
+        router.Handle(chatUrl, middleware.PanicAndRecover(middleware.Logging(chatStartHandler, h.logger), h.logger))
+}</span>
+
+func (h handler) CreateUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        code := h.isPost(r)
+        if code &gt; 0 </span><span class="cov8" title="1">{
+                w.WriteHeader(code)
+                return
+        }</span>
+        // @todo: refactor validation to service
+        <span class="cov8" title="1">uDTO := &amp;UserDTO{}
+        err := json.NewDecoder(r.Body).Decode(uDTO)
+
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Entry.Error("wrong json format")
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">v := validator.New()
+
+        if err := v.Struct(uDTO); err != nil </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusBadRequest)
+                responseBody := uerrors.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: fmt.Sprintf("got wrong user data: %+v", err),
+                }
+                if err := json.NewEncoder(w).Encode(responseBody); err != nil </span><span class="cov0" title="0">{
+                        h.logger.Entry.Errorf("problems with encoding data: %+v", err)
+                        w.WriteHeader(http.StatusBadRequest)
+                }</span>
+                <span class="cov8" title="1">h.logger.Entry.Errorf("got wrong user data: %+v", err)
+                w.WriteHeader(http.StatusBadRequest)
+                return</span>
+        }
+        // @todo: end
+
+        <span class="cov8" title="1">uID, err := h.service.Create(r.Context(), *uDTO)
+        if err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("can't create user: %+v", err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+        // @todo refactor to service
+        <span class="cov8" title="1">w.Header().Add(headerContentType, headerValueContentType)
+        w.WriteHeader(http.StatusOK)
+        responseBody := UserCreateResponse{
+                ID:       uID,
+                Username: uDTO.Username,
+        }
+
+        if err := json.NewEncoder(w).Encode(responseBody); err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("can't create user: %+v", err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+        // @todo end
+
+        <span class="cov8" title="1">h.logger.Entry.Infof("create user %+v", uDTO)</span>
+}
+
+func (h handler) LoginUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        code := h.isPost(r)
+        if code &gt; 0 </span><span class="cov8" title="1">{
+                w.WriteHeader(code)
+                return
+        }</span>
+        // @todo: refactor validation to service
+        <span class="cov8" title="1">uDTO := &amp;UserDTO{}
+        err := json.NewDecoder(r.Body).Decode(uDTO)
+
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Entry.Error("wrong json format")
+                w.WriteHeader(http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">v := validator.New()
+
+        if err := v.Struct(uDTO); err != nil </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusBadRequest)
+                responseBody := uerrors.ErrorResponse{
+                        Code:    http.StatusBadRequest,
+                        Message: fmt.Sprintf("got wrong user data: %+v", err),
+                }
+                if err := json.NewEncoder(w).Encode(responseBody); err != nil </span><span class="cov0" title="0">{
+                        h.logger.Entry.Errorf("problems with encoding data: %+v", err)
+                }</span>
+                <span class="cov8" title="1">h.logger.Entry.Errorf("got wrong user data: %+v", err)
+                return</span>
+        }
+        // @todo: end
+
+        //find user and create token
+        <span class="cov8" title="1">u, err := h.service.Login(r.Context(), uDTO)
+        if err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("error with user login: %v", err)
+        }</span>
+        <span class="cov8" title="1">hash, err := h.service.CreateToken(r.Context(), u)
+        if err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("error with create token: %v", err)
+        }</span>
+        // @todo refactor to service
+        <span class="cov8" title="1">w.Header().Add(headerValueXRateLimit, xRateLimit)
+
+        accessTokenTTL, err := time.ParseDuration(h.config.Auth.AccessTokenTTL)
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Entry.Errorf("Error with access token ttl: %s", err)
+        }</span>
+
+        <span class="cov8" title="1">w.Header().Add(headerXExpiresAfter, time.Now().Local().Add(accessTokenTTL).String())
+        w.Header().Add(headerContentType, headerValueContentType)
+        w.WriteHeader(http.StatusOK)
+        responseBody := UserLoginResponse{
+                Url: h.config.WS.WsHost + chatUrl + "?token=" + hash,
+        }
+        if err := json.NewEncoder(w).Encode(responseBody); err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("Failed to login user: %+v", err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+        // @todo end
+
+        <span class="cov8" title="1">h.logger.Entry.Infof("user sussesfully logged in")</span>
+}
+
+func (h handler) ActiveUser(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        code := h.isGet(r)
+        if code &gt; 0 </span><span class="cov8" title="1">{
+                w.WriteHeader(code)
+                return
+        }</span>
+
+        <span class="cov8" title="1">count, err := h.service.GetOnlineUsers(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                h.logger.Entry.Error("Error with getting online users count: %s", err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov8" title="1">responseBody := UserOnlineResponse{
+                Count: count,
+        }
+
+        if err := json.NewEncoder(w).Encode(responseBody); err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("Failed to login user: %+v", err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+}
+
+func (h handler) ChatStart(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        httpStatusCode := h.isGet(r)
+        if httpStatusCode &gt; 0 </span><span class="cov8" title="1">{
+                w.WriteHeader(httpStatusCode)
+                return
+        }</span>
+
+        <span class="cov8" title="1">token, ok := r.URL.Query()["token"]
+        if !ok || len(token[0]) &lt; 1 </span><span class="cov8" title="1">{
+                h.logger.Entry.Error("Url Param 'token' is missing")
+                w.WriteHeader(http.StatusBadRequest)
+                return
+        }</span>
+        // find user with token
+        <span class="cov8" title="1">u, httpCode, err := h.service.ChatStart(r.Context(), token[0])
+        if err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("Error happens: %s", err)
+                w.WriteHeader(httpCode)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = h.service.StartWS(w, r, u)
+        if err != nil </span><span class="cov0" title="0">{
+                h.logger.Entry.Errorf("wrong http method due error: %s", err)
+                w.WriteHeader(http.StatusInternalServerError)
+                return
+        }</span>
+}
+
+func (h handler) isGet(r *http.Request) int <span class="cov8" title="1">{
+        if r.Method != "GET" </span><span class="cov8" title="1">{
+                h.logger.Entry.Error("Wrong http method. Use `GET`")
+                return http.StatusInternalServerError
+        }</span>
+        <span class="cov8" title="1">return 0</span>
+}
+
+func (h handler) isPost(r *http.Request) int <span class="cov8" title="1">{
+        if r.Method != "POST" </span><span class="cov8" title="1">{
+                h.logger.Entry.Error("Wrong http method. Use `POST`")
+                return http.StatusInternalServerError
+        }</span>
+        <span class="cov8" title="1">return 0</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package user
+
+import (
+        "context"
+        "fmt"
+        "net/http"
+        "sync"
+        "time"
+
+        uerrors "github.com/dkischenko/chat/internal/errors"
+        "github.com/dkischenko/chat/pkg/auth"
+        "github.com/dkischenko/chat/pkg/hasher"
+        "github.com/dkischenko/chat/pkg/logger"
+        "github.com/gorilla/websocket"
+)
+
+type Service struct {
+        logger       *logger.Logger
+        storage      Repository
+        tokenManager *auth.Manager
+        Upgrader     websocket.Upgrader
+        rwMutex      *sync.RWMutex
+        clients      map[*websocket.Conn]bool
+}
+
+//go:generate mockgen -source=service.go -destination=mocks/service_mock.go
+type IService interface {
+        Create(ctx context.Context, user UserDTO) (id string, err error)
+        Login(ctx context.Context, dto *UserDTO) (u *User, err error)
+        FindByUUID(ctx context.Context, uid string) (u *User, err error)
+        RevokeToken(ctx context.Context, u *User) (ok bool)
+        CreateToken(ctx context.Context, u *User) (hash string, err error)
+        GetOnlineUsers(ctx context.Context) (count int, err error)
+        StartWS(w http.ResponseWriter, r *http.Request, u *User) error
+        ChatStart(ctx context.Context, token string) (u *User, code int, err error)
+        InitSocketConnection(w http.ResponseWriter, r *http.Request, u *User) error
+}
+
+func NewService(logger *logger.Logger, storage Repository, tokenTTL time.Duration) IService <span class="cov8" title="1">{
+        tm, err := auth.NewManager(tokenTTL)
+        if err != nil </span><span class="cov0" title="0">{
+                logger.Entry.Errorf("error with token manager: %s", err)
+        }</span>
+        <span class="cov8" title="1">return &amp;Service{
+                logger:       logger,
+                storage:      storage,
+                tokenManager: tm,
+                Upgrader: websocket.Upgrader{
+                        ReadBufferSize:  1024,
+                        WriteBufferSize: 1024,
+                },
+                rwMutex: new(sync.RWMutex),
+                clients: make(map[*websocket.Conn]bool),
+        }</span>
+}
+
+func (s Service) Create(ctx context.Context, user UserDTO) (id string, err error) <span class="cov8" title="1">{
+        if len(user.Username) == 0 </span><span class="cov8" title="1">{
+                s.logger.Entry.Errorf("error occurs: %s", uerrors.ErrEmptyUsername)
+                return "", fmt.Errorf("error occurs: %w", uerrors.ErrEmptyUsername)
+        }</span>
+        <span class="cov8" title="1">hashPassword, err := hasher.HashPassword(user.Password)
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("troubles with hashing password: %s", user.Password)
+                return "", err
+        }</span>
+        <span class="cov8" title="1">usr := &amp;User{
+                Username:     user.Username,
+                PasswordHash: hashPassword,
+        }
+
+        id, err = s.storage.Create(ctx, usr)
+
+        if err != nil </span><span class="cov8" title="1">{
+                return id, err
+        }</span>
+
+        <span class="cov8" title="1">return</span>
+}
+
+func (s Service) Login(ctx context.Context, dto *UserDTO) (u *User, err error) <span class="cov8" title="1">{
+        u, err = s.storage.FindOne(ctx, dto.Username)
+        if err != nil </span><span class="cov8" title="1">{
+                s.logger.Entry.Errorf("failed find user with error: %s", err)
+                return nil, fmt.Errorf("error occurs: %w", uerrors.ErrFindOneUser)
+        }</span>
+
+        <span class="cov8" title="1">if !hasher.CheckPasswordHash(u.PasswordHash, dto.Password) </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("user used wrong password: %s", err)
+                return nil, fmt.Errorf("error occurs: %w", uerrors.ErrCheckUserPasswordHash)
+        }</span>
+
+        <span class="cov8" title="1">return</span>
+}
+
+func (s Service) FindByUUID(ctx context.Context, uid string) (u *User, err error) <span class="cov8" title="1">{
+        u, err = s.storage.FindByUUID(ctx, uid)
+        if err != nil </span><span class="cov8" title="1">{
+                s.logger.Entry.Errorf("failed find user with error: %s", err)
+                return nil, fmt.Errorf("error occurs: %w with uuid %s", uerrors.ErrFindUserByUIID, uid)
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+func (s Service) RevokeToken(ctx context.Context, u *User) (ok bool) <span class="cov8" title="1">{
+        err := s.storage.UpdateKey(ctx, u, "")
+        if err != nil </span><span class="cov8" title="1">{
+                s.logger.Entry.Errorf("error occurs: %s. %w", err, uerrors.ErrRevokeToken)
+                return false
+        }</span>
+        <span class="cov8" title="1">return true</span>
+}
+
+func (s Service) CreateToken(ctx context.Context, u *User) (hash string, err error) <span class="cov8" title="1">{
+        hash, err = s.tokenManager.CreateJWT(u.ID)
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("problems with creating jwt token: %s", err)
+                return "", fmt.Errorf("error occurs: %w", uerrors.ErrCreateJWTToken)
+        }</span>
+
+        <span class="cov8" title="1">if err := s.storage.UpdateKey(ctx, u, hash); err != nil </span><span class="cov8" title="1">{
+                s.logger.Entry.Errorf("error with user update: %s", err)
+                return "", fmt.Errorf("error occurs: %w", uerrors.ErrUserUpdateKey)
+        }</span>
+
+        <span class="cov8" title="1">return</span>
+}
+
+func (s Service) parseToken(tokenString string) (uuid string, err error) <span class="cov8" title="1">{
+        uuid, err = s.tokenManager.ParseJWT(tokenString)
+        if err != nil </span><span class="cov8" title="1">{
+                return "", err
+        }</span>
+        <span class="cov8" title="1">return uuid, nil</span>
+}
+
+func (s Service) StartWS(w http.ResponseWriter, r *http.Request, u *User) error <span class="cov0" title="0">{
+        err := s.InitSocketConnection(w, r, u)
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("error with websocket initialization: %s", err)
+                return err
+        }</span>
+
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (s Service) GetOnlineUsers(ctx context.Context) (count int, err error) <span class="cov8" title="1">{
+        count, err = s.storage.GetOnline(ctx)
+        if err != nil </span><span class="cov8" title="1">{
+                s.logger.Entry.Errorf("error occurs: %s. %w", err, uerrors.ErrGetOnlineUsers)
+                return 0, err
+        }</span>
+        <span class="cov8" title="1">return</span>
+}
+
+func (s Service) ChatStart(ctx context.Context, token string) (u *User, code int, err error) <span class="cov8" title="1">{
+        uuid, err := s.parseToken(token)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, http.StatusBadRequest, err
+        }</span>
+
+        <span class="cov8" title="1">u, err = s.FindByUUID(ctx, uuid)
+        if err != nil </span><span class="cov8" title="1">{
+                return nil, http.StatusBadRequest, err
+        }</span>
+
+        <span class="cov8" title="1">if len(u.Key) == 0 </span><span class="cov8" title="1">{
+                return u, http.StatusBadRequest, fmt.Errorf("error occurs: %w", uerrors.ErrEmptyUserKey)
+        }</span>
+        <span class="cov8" title="1">ok := s.RevokeToken(ctx, u)
+        if !ok </span><span class="cov8" title="1">{
+                return u, http.StatusInternalServerError, fmt.Errorf("error occurs: %w", uerrors.ErrRevokeToken)
+        }</span>
+
+        <span class="cov8" title="1">return u, http.StatusOK, nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package user
+
+import (
+        "context"
+        "fmt"
+        "log"
+        "net/http"
+
+        "github.com/gorilla/websocket"
+)
+
+func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *User) error <span class="cov0" title="0">{
+        s.Upgrader.CheckOrigin = func(r *http.Request) bool </span><span class="cov0" title="0">{
+                return true
+        }</span>
+
+        <span class="cov0" title="0">connection, err := s.Upgrader.Upgrade(w, r, nil)
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("WS connection error: %s", err)
+        }</span>
+        <span class="cov0" title="0">s.clientAdd(connection)
+        log.Printf("%s goes online.", u.Username)
+        if err = s.reader(connection, r.Context(), u); err != nil </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("%s", err)
+        }</span>
+        <span class="cov0" title="0">s.clientDelete(connection)
+        err = connection.Close()
+        if err != nil </span><span class="cov0" title="0">{
+                s.logger.Entry.Errorf("error happens: %s", err)
+        }</span>
+        <span class="cov0" title="0">return nil</span>
+}
+
+func (s *Service) reader(conn *websocket.Conn, ctx context.Context, u *User) (err error) <span class="cov0" title="0">{
+        for </span><span class="cov0" title="0">{
+                messageType, p, err := conn.ReadMessage()
+                if err != nil || messageType == websocket.CloseMessage </span><span class="cov0" title="0">{
+                        err = s.storage.UpdateOnline(ctx, u, false)
+                        log.Printf("&lt;%s&gt; left chat", u.Username)
+                        s.logger.Entry.Errorf("Error with update online status: %s", err)
+                        return fmt.Errorf("received error: %s", err)
+                }</span>
+                <span class="cov0" title="0">err = s.storage.UpdateOnline(ctx, u, true)
+                if err != nil </span><span class="cov0" title="0">{
+                        s.logger.Entry.Errorf("Error with update online status: %s", err)
+                }</span>
+
+                <span class="cov0" title="0">s.rwMutex.RLock()
+                defer s.rwMutex.RUnlock()
+                for connKey := range s.clients </span><span class="cov0" title="0">{
+                        if conn != connKey </span><span class="cov0" title="0">{
+                                log.Printf("&lt;%s&gt;: %s", u.Username, string(p))
+                                err := connKey.WriteMessage(messageType, p)
+                                if err != nil </span><span class="cov0" title="0">{
+                                        s.logger.Entry.Errorf("Error with sending message: %s", err)
+                                }</span>
+                        }
+                }
+
+                <span class="cov0" title="0">if err := conn.WriteMessage(messageType, p); err != nil </span><span class="cov0" title="0">{
+                        return fmt.Errorf("received error: %s", err)
+                }</span>
+        }
+}
+
+func (s *Service) clientAdd(conn *websocket.Conn) <span class="cov0" title="0">{
+        s.rwMutex.Lock()
+        defer s.rwMutex.Unlock()
+        s.clients[conn] = true
+}</span>
+
+func (s *Service) clientDelete(conn *websocket.Conn) <span class="cov0" title="0">{
+        s.rwMutex.Lock()
+        defer s.rwMutex.Unlock()
+        delete(s.clients, conn)
+}</span>
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>

@@ -2,6 +2,7 @@ package database
 
 import (
 	"context"
+	uerrors "github.com/dkischenko/chat/internal/errors"
 	"github.com/dkischenko/chat/internal/user"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/dkischenko/chat/pkg/uuid"
@@ -41,13 +42,13 @@ func (ls *localstorage) FindOne(ctx context.Context, username string) (u *user.U
 		}
 	}
 
-	return nil, user.ErrUserNotFound
+	return nil, uerrors.ErrUserNotFound
 }
 
 func (ls *localstorage) FindAll(ctx context.Context) (u []*user.User, err error) {
 	if len(ls.users) < 0 {
-		ls.logger.Entry.Error(user.ErrUserNotFound)
-		return nil, user.ErrUserNotFound
+		ls.logger.Entry.Error(uerrors.ErrUserNotFound)
+		return nil, uerrors.ErrUserNotFound
 	}
 	return ls.users, nil
 }

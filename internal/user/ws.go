@@ -9,7 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func (s *service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *User) error {
+func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *User) error {
 	s.Upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
@@ -31,14 +31,14 @@ func (s *service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u
 	return nil
 }
 
-func (s *service) reader(conn *websocket.Conn, ctx context.Context, u *User) (err error) {
+func (s *Service) reader(conn *websocket.Conn, ctx context.Context, u *User) (err error) {
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil || messageType == websocket.CloseMessage {
 			err = s.storage.UpdateOnline(ctx, u, false)
 			log.Printf("<%s> left chat", u.Username)
 			s.logger.Entry.Errorf("Error with update online status: %s", err)
-			return fmt.Errorf("Received error: %s", err)
+			return fmt.Errorf("received error: %s", err)
 		}
 		err = s.storage.UpdateOnline(ctx, u, true)
 		if err != nil {
@@ -58,18 +58,18 @@ func (s *service) reader(conn *websocket.Conn, ctx context.Context, u *User) (er
 		}
 
 		if err := conn.WriteMessage(messageType, p); err != nil {
-			return fmt.Errorf("Received error: %s", err)
+			return fmt.Errorf("received error: %s", err)
 		}
 	}
 }
 
-func (s *service) clientAdd(conn *websocket.Conn) {
+func (s *Service) clientAdd(conn *websocket.Conn) {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 	s.clients[conn] = true
 }
 
-func (s *service) clientDelete(conn *websocket.Conn) {
+func (s *Service) clientDelete(conn *websocket.Conn) {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 	delete(s.clients, conn)
