@@ -2,10 +2,13 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+	"strings"
+
+	uerrors "github.com/dkischenko/chat/internal/errors"
 	"github.com/dkischenko/chat/internal/user"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/jackc/pgx/v4/pgxpool"
-	"strings"
 )
 
 type postgres struct {
@@ -34,7 +37,7 @@ func (db *postgres) Create(ctx context.Context, user *user.User) (id string, err
 	err = db.pool.QueryRow(ctx, formatQuery(q), user.Username, user.PasswordHash).Scan(&user.ID)
 	if err != nil {
 		db.logger.Entry.Error(err)
-		return "", err
+		return "", fmt.Errorf("Error occurs: %s. %s", err, uerrors.ErrCreateUser)
 	}
 	return user.ID, nil
 }
@@ -80,7 +83,7 @@ func (db *postgres) UpdateKey(ctx context.Context, user *user.User, key string) 
 	_, err = db.pool.Exec(ctx, q, key, user.ID)
 	if err != nil {
 		db.logger.Entry.Error(err)
-		return nil
+		return fmt.Errorf("Error occurs: %w", uerrors.ErrUserUpdateKey)
 	}
 	return
 }

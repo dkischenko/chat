@@ -47,11 +47,11 @@ func GetLogger() (logger *Logger, err error) {
 		FullTimestamp: true,
 	}
 
-	err = os.MkdirAll("logs", 0755)
+	err = os.MkdirAll(fmt.Sprintf("%s/logs", os.Getenv("CHATLOGPATH")), 0755)
 	if err != nil {
 		return nil, err
 	}
-	allFile, err := os.OpenFile("logs/all.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
+	allFile, err := os.OpenFile(fmt.Sprintf("%s/logs/all.log", os.Getenv("CHATLOGPATH")), os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0755)
 
 	if err != nil {
 		return nil, err

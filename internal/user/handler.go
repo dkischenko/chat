@@ -4,10 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/dkischenko/chat/internal/config"
-	"github.com/dkischenko/chat/internal/handlers"
+	uerrors "github.com/dkischenko/chat/internal/errors"
 	"github.com/dkischenko/chat/internal/middleware"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/go-playground/validator/v10"
+	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"time"
 )
@@ -26,11 +27,11 @@ const (
 
 type handler struct {
 	logger  *logger.Logger
-	service *service
+	service IService
 	config  *config.Config
 }
 
-func NewHandler(logger *logger.Logger, service *service, cfg *config.Config) handlers.Handler {
+func NewHandler(logger *logger.Logger, service IService, cfg *config.Config) *handler {
 	return &handler{
 		logger:  logger,
 		service: service,
@@ -38,7 +39,7 @@ func NewHandler(logger *logger.Logger, service *service, cfg *config.Config) han
 	}
 }
 
-func (h *handler) Register(router *http.ServeMux) {
+func (h handler) Register(router *http.ServeMux) {
 	createUserHandler := http.HandlerFunc(h.CreateUser)
 	loginUserHandler := http.HandlerFunc(h.LoginUser)
 	activeUserHandler := http.HandlerFunc(h.ActiveUser)
@@ -49,7 +50,7 @@ func (h *handler) Register(router *http.ServeMux) {
 	router.Handle(chatUrl, middleware.PanicAndRecover(middleware.Logging(chatStartHandler, h.logger), h.logger))
 }
 
-func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
+func (h handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	code := h.isPost(r)
 	if code > 0 {
 		w.WriteHeader(code)
@@ -69,7 +70,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := v.Struct(uDTO); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		responseBody := ErrorResponse{
+		responseBody := uerrors.ErrorResponse{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("got wrong user data: %+v", err),
 		}
@@ -107,7 +108,7 @@ func (h *handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	h.logger.Entry.Infof("create user %+v", uDTO)
 }
 
-func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
+func (h handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	code := h.isPost(r)
 	if code > 0 {
 		w.WriteHeader(code)
@@ -127,7 +128,7 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := v.Struct(uDTO); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		responseBody := ErrorResponse{
+		responseBody := uerrors.ErrorResponse{
 			Code:    http.StatusBadRequest,
 			Message: fmt.Sprintf("got wrong user data: %+v", err),
 		}
@@ -172,7 +173,7 @@ func (h *handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	h.logger.Entry.Infof("user sussesfully logged in")
 }
 
-func (h *handler) ActiveUser(w http.ResponseWriter, r *http.Request) {
+func (h handler) ActiveUser(w http.ResponseWriter, r *http.Request) {
 	code := h.isGet(r)
 	if code > 0 {
 		w.WriteHeader(code)
@@ -196,7 +197,7 @@ func (h *handler) ActiveUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) ChatStart(w http.ResponseWriter, r *http.Request) {
+func (h handler) ChatStart(w http.ResponseWriter, r *http.Request) {
 	httpStatusCode := h.isGet(r)
 	if httpStatusCode > 0 {
 		w.WriteHeader(httpStatusCode)
@@ -225,7 +226,7 @@ func (h *handler) ChatStart(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *handler) isGet(r *http.Request) int {
+func (h handler) isGet(r *http.Request) int {
 	if r.Method != "GET" {
 		h.logger.Entry.Error("Wrong http method. Use `GET`")
 		return http.StatusInternalServerError
@@ -233,7 +234,7 @@ func (h *handler) isGet(r *http.Request) int {
 	return 0
 }
 
-func (h *handler) isPost(r *http.Request) int {
+func (h handler) isPost(r *http.Request) int {
 	if r.Method != "POST" {
 		h.logger.Entry.Error("Wrong http method. Use `POST`")
 		return http.StatusInternalServerError

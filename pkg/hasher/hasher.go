@@ -3,12 +3,18 @@ package hasher
 // Package hasher implements utility for
 // hashing passwords
 
-import "golang.org/x/crypto/bcrypt"
+import (
+	"fmt"
+	"golang.org/x/crypto/bcrypt"
+)
 
 // HashPassword returns bcrypt hash of the password or error if password hash goes wrong.
 // Use CheckPasswordHash, as defined in this package,
 // to compare the returned hashed password with its cleartext version.
 func HashPassword(password string) (string, error) {
+	if len(password) == 0 {
+		return "", fmt.Errorf("String must not be empty")
+	}
 	b, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	return string(b), err
 }
