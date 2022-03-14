@@ -8,7 +8,6 @@ import (
 	"github.com/dkischenko/chat/internal/middleware"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/go-playground/validator/v10"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"time"
 )
