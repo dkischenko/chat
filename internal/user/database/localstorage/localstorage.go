@@ -4,26 +4,27 @@ import (
 	"context"
 	uerrors "github.com/dkischenko/chat/internal/errors"
 	"github.com/dkischenko/chat/internal/user"
+	"github.com/dkischenko/chat/internal/user/models"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/dkischenko/chat/pkg/uuid"
 	"sync"
 )
 
 type localstorage struct {
-	users   []*user.User
+	users   []*models.User
 	rwMutex *sync.RWMutex
 	logger  *logger.Logger
 }
 
 func NewStorage(logger *logger.Logger) user.Repository {
 	return &localstorage{
-		users:   make([]*user.User, 1),
+		users:   make([]*models.User, 1),
 		rwMutex: new(sync.RWMutex),
 		logger:  logger,
 	}
 }
 
-func (ls *localstorage) Create(ctx context.Context, user *user.User) (id string, err error) {
+func (ls *localstorage) Create(ctx context.Context, user *models.User) (id string, err error) {
 	ls.rwMutex.Lock()
 	defer ls.rwMutex.Unlock()
 	user.ID = uuid.GetUUID()
@@ -32,7 +33,7 @@ func (ls *localstorage) Create(ctx context.Context, user *user.User) (id string,
 	return user.ID, nil
 }
 
-func (ls *localstorage) FindOne(ctx context.Context, username string) (u *user.User, err error) {
+func (ls *localstorage) FindOne(ctx context.Context, username string) (u *models.User, err error) {
 	ls.rwMutex.RLock()
 	defer ls.rwMutex.RUnlock()
 
@@ -45,7 +46,7 @@ func (ls *localstorage) FindOne(ctx context.Context, username string) (u *user.U
 	return nil, uerrors.ErrUserNotFound
 }
 
-func (ls *localstorage) FindAll(ctx context.Context) (u []*user.User, err error) {
+func (ls *localstorage) FindAll(ctx context.Context) (u []*models.User, err error) {
 	if len(ls.users) < 0 {
 		ls.logger.Entry.Error(uerrors.ErrUserNotFound)
 		return nil, uerrors.ErrUserNotFound
@@ -53,15 +54,15 @@ func (ls *localstorage) FindAll(ctx context.Context) (u []*user.User, err error)
 	return ls.users, nil
 }
 
-func (ls *localstorage) UpdateKey(ctx context.Context, user *user.User, key string) (err error) {
+func (ls *localstorage) UpdateKey(ctx context.Context, user *models.User, key string) (err error) {
 	panic("Implement me")
 }
 
-func (ls *localstorage) FindByUUID(ctx context.Context, uuid string) (u *user.User, err error) {
+func (ls *localstorage) FindByUUID(ctx context.Context, uuid string) (u *models.User, err error) {
 	panic("Implement me")
 }
 
-func (ls *localstorage) UpdateOnline(ctx context.Context, user *user.User, isOnline bool) (err error) {
+func (ls *localstorage) UpdateOnline(ctx context.Context, user *models.User, isOnline bool) (err error) {
 	panic("Implement me")
 }
 

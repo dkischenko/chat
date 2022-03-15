@@ -3,6 +3,7 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/dkischenko/chat/internal/user/models"
 	"net/http"
 	"sync"
 	"time"
@@ -25,15 +26,15 @@ type Service struct {
 
 //go:generate mockgen -source=service.go -destination=mocks/service_mock.go
 type IService interface {
-	Create(ctx context.Context, user UserDTO) (id string, err error)
-	Login(ctx context.Context, dto *UserDTO) (u *User, err error)
-	FindByUUID(ctx context.Context, uid string) (u *User, err error)
-	RevokeToken(ctx context.Context, u *User) (ok bool)
-	CreateToken(ctx context.Context, u *User) (hash string, err error)
+	Create(ctx context.Context, user models.UserDTO) (id string, err error)
+	Login(ctx context.Context, dto *models.UserDTO) (u *models.User, err error)
+	FindByUUID(ctx context.Context, uid string) (u *models.User, err error)
+	RevokeToken(ctx context.Context, u *models.User) (ok bool)
+	CreateToken(ctx context.Context, u *models.User) (hash string, err error)
 	GetOnlineUsers(ctx context.Context) (count int, err error)
-	StartWS(w http.ResponseWriter, r *http.Request, u *User) error
-	ChatStart(ctx context.Context, token string) (u *User, code int, err error)
-	InitSocketConnection(w http.ResponseWriter, r *http.Request, u *User) error
+	StartWS(w http.ResponseWriter, r *http.Request, u *models.User) error
+	ChatStart(ctx context.Context, token string) (u *models.User, code int, err error)
+	InitSocketConnection(w http.ResponseWriter, r *http.Request, u *models.User) error
 }
 
 func NewService(logger *logger.Logger, storage Repository, tokenTTL time.Duration) IService {
@@ -54,7 +55,7 @@ func NewService(logger *logger.Logger, storage Repository, tokenTTL time.Duratio
 	}
 }
 
-func (s Service) Create(ctx context.Context, user UserDTO) (id string, err error) {
+func (s Service) Create(ctx context.Context, user models.UserDTO) (id string, err error) {
 	if len(user.Username) == 0 {
 		s.logger.Entry.Errorf("error occurs: %s", uerrors.ErrEmptyUsername)
 		return "", fmt.Errorf("error occurs: %w", uerrors.ErrEmptyUsername)
@@ -64,7 +65,7 @@ func (s Service) Create(ctx context.Context, user UserDTO) (id string, err error
 		s.logger.Entry.Errorf("troubles with hashing password: %s", user.Password)
 		return "", err
 	}
-	usr := &User{
+	usr := &models.User{
 		Username:     user.Username,
 		PasswordHash: hashPassword,
 	}
@@ -78,7 +79,7 @@ func (s Service) Create(ctx context.Context, user UserDTO) (id string, err error
 	return
 }
 
-func (s Service) Login(ctx context.Context, dto *UserDTO) (u *User, err error) {
+func (s Service) Login(ctx context.Context, dto *models.UserDTO) (u *models.User, err error) {
 	u, err = s.storage.FindOne(ctx, dto.Username)
 	if err != nil {
 		s.logger.Entry.Errorf("failed find user with error: %s", err)
@@ -93,7 +94,7 @@ func (s Service) Login(ctx context.Context, dto *UserDTO) (u *User, err error) {
 	return
 }
 
-func (s Service) FindByUUID(ctx context.Context, uid string) (u *User, err error) {
+func (s Service) FindByUUID(ctx context.Context, uid string) (u *models.User, err error) {
 	u, err = s.storage.FindByUUID(ctx, uid)
 	if err != nil {
 		s.logger.Entry.Errorf("failed find user with error: %s", err)
@@ -102,7 +103,7 @@ func (s Service) FindByUUID(ctx context.Context, uid string) (u *User, err error
 	return
 }
 
-func (s Service) RevokeToken(ctx context.Context, u *User) (ok bool) {
+func (s Service) RevokeToken(ctx context.Context, u *models.User) (ok bool) {
 	err := s.storage.UpdateKey(ctx, u, "")
 	if err != nil {
 		s.logger.Entry.Errorf("error occurs: %s. %w", err, uerrors.ErrRevokeToken)
@@ -111,7 +112,7 @@ func (s Service) RevokeToken(ctx context.Context, u *User) (ok bool) {
 	return true
 }
 
-func (s Service) CreateToken(ctx context.Context, u *User) (hash string, err error) {
+func (s Service) CreateToken(ctx context.Context, u *models.User) (hash string, err error) {
 	hash, err = s.tokenManager.CreateJWT(u.ID)
 	if err != nil {
 		s.logger.Entry.Errorf("problems with creating jwt token: %s", err)
@@ -134,7 +135,7 @@ func (s Service) parseToken(tokenString string) (uuid string, err error) {
 	return uuid, nil
 }
 
-func (s Service) StartWS(w http.ResponseWriter, r *http.Request, u *User) error {
+func (s *Service) StartWS(w http.ResponseWriter, r *http.Request, u *models.User) error {
 	err := s.InitSocketConnection(w, r, u)
 	if err != nil {
 		s.logger.Entry.Errorf("error with websocket initialization: %s", err)
@@ -153,7 +154,7 @@ func (s Service) GetOnlineUsers(ctx context.Context) (count int, err error) {
 	return
 }
 
-func (s Service) ChatStart(ctx context.Context, token string) (u *User, code int, err error) {
+func (s Service) ChatStart(ctx context.Context, token string) (u *models.User, code int, err error) {
 	uuid, err := s.parseToken(token)
 	if err != nil {
 		return nil, http.StatusBadRequest, err

@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"github.com/dkischenko/chat/internal/user/models"
 	"strings"
 
 	uerrors "github.com/dkischenko/chat/internal/errors"
@@ -27,7 +28,7 @@ func formatQuery(q string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(q, "\t", ""), "\n", "")
 }
 
-func (db *postgres) Create(ctx context.Context, user *user.User) (id string, err error) {
+func (db *postgres) Create(ctx context.Context, user *models.User) (id string, err error) {
 	q := `
 		INSERT INTO users(username, password_hash) 
 		    VALUES
@@ -42,8 +43,8 @@ func (db *postgres) Create(ctx context.Context, user *user.User) (id string, err
 	return user.ID, nil
 }
 
-func (db *postgres) FindOne(ctx context.Context, username string) (u *user.User, err error) {
-	u = &user.User{}
+func (db *postgres) FindOne(ctx context.Context, username string) (u *models.User, err error) {
+	u = &models.User{}
 	q := `
 		SELECT id, username, password_hash, key, is_online 
 		FROM users WHERE username = $1
@@ -58,8 +59,8 @@ func (db *postgres) FindOne(ctx context.Context, username string) (u *user.User,
 	return u, nil
 }
 
-func (db *postgres) FindByUUID(ctx context.Context, uuid string) (u *user.User, err error) {
-	u = &user.User{}
+func (db *postgres) FindByUUID(ctx context.Context, uuid string) (u *models.User, err error) {
+	u = &models.User{}
 	q := `
 		SELECT id, username, password_hash, key, is_online
 		FROM users WHERE id = $1
@@ -74,7 +75,7 @@ func (db *postgres) FindByUUID(ctx context.Context, uuid string) (u *user.User, 
 	return
 }
 
-func (db *postgres) UpdateKey(ctx context.Context, user *user.User, key string) (err error) {
+func (db *postgres) UpdateKey(ctx context.Context, user *models.User, key string) (err error) {
 	q := `
 		UPDATE users
 		SET key = $1
@@ -88,7 +89,7 @@ func (db *postgres) UpdateKey(ctx context.Context, user *user.User, key string) 
 	return
 }
 
-func (db *postgres) UpdateOnline(ctx context.Context, user *user.User, isOnline bool) (err error) {
+func (db *postgres) UpdateOnline(ctx context.Context, user *models.User, isOnline bool) (err error) {
 	q := `
 		UPDATE users
 		SET is_online = $1

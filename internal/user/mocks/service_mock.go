@@ -6,10 +6,10 @@ package mock_user
 
 import (
 	context "context"
+	"github.com/dkischenko/chat/internal/user/models"
 	http "net/http"
 	reflect "reflect"
 
-	user "github.com/dkischenko/chat/internal/user"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -37,10 +37,10 @@ func (m *MockIService) EXPECT() *MockIServiceMockRecorder {
 }
 
 // ChatStart mocks base method.
-func (m *MockIService) ChatStart(ctx context.Context, token string) (*user.User, int, error) {
+func (m *MockIService) ChatStart(ctx context.Context, token string) (*models.User, int, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ChatStart", ctx, token)
-	ret0, _ := ret[0].(*user.User)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(int)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
@@ -53,7 +53,7 @@ func (mr *MockIServiceMockRecorder) ChatStart(ctx, token interface{}) *gomock.Ca
 }
 
 // Create mocks base method.
-func (m *MockIService) Create(ctx context.Context, user user.UserDTO) (string, error) {
+func (m *MockIService) Create(ctx context.Context, user models.UserDTO) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, user)
 	ret0, _ := ret[0].(string)
@@ -68,7 +68,7 @@ func (mr *MockIServiceMockRecorder) Create(ctx, user interface{}) *gomock.Call {
 }
 
 // CreateToken mocks base method.
-func (m *MockIService) CreateToken(ctx context.Context, u *user.User) (string, error) {
+func (m *MockIService) CreateToken(ctx context.Context, u *models.User) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateToken", ctx, u)
 	ret0, _ := ret[0].(string)
@@ -83,10 +83,10 @@ func (mr *MockIServiceMockRecorder) CreateToken(ctx, u interface{}) *gomock.Call
 }
 
 // FindByUUID mocks base method.
-func (m *MockIService) FindByUUID(ctx context.Context, uid string) (*user.User, error) {
+func (m *MockIService) FindByUUID(ctx context.Context, uid string) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByUUID", ctx, uid)
-	ret0, _ := ret[0].(*user.User)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -113,7 +113,7 @@ func (mr *MockIServiceMockRecorder) GetOnlineUsers(ctx interface{}) *gomock.Call
 }
 
 // InitSocketConnection mocks base method.
-func (m *MockIService) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *user.User) error {
+func (m *MockIService) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *models.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InitSocketConnection", w, r, u)
 	ret0, _ := ret[0].(error)
@@ -127,10 +127,10 @@ func (mr *MockIServiceMockRecorder) InitSocketConnection(w, r, u interface{}) *g
 }
 
 // Login mocks base method.
-func (m *MockIService) Login(ctx context.Context, dto *user.UserDTO) (*user.User, error) {
+func (m *MockIService) Login(ctx context.Context, dto *models.UserDTO) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Login", ctx, dto)
-	ret0, _ := ret[0].(*user.User)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -142,7 +142,7 @@ func (mr *MockIServiceMockRecorder) Login(ctx, dto interface{}) *gomock.Call {
 }
 
 // RevokeToken mocks base method.
-func (m *MockIService) RevokeToken(ctx context.Context, u *user.User) bool {
+func (m *MockIService) RevokeToken(ctx context.Context, u *models.User) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RevokeToken", ctx, u)
 	ret0, _ := ret[0].(bool)
@@ -156,7 +156,7 @@ func (mr *MockIServiceMockRecorder) RevokeToken(ctx, u interface{}) *gomock.Call
 }
 
 // StartWS mocks base method.
-func (m *MockIService) StartWS(w http.ResponseWriter, r *http.Request, u *user.User) error {
+func (m *MockIService) StartWS(w http.ResponseWriter, r *http.Request, u *models.User) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StartWS", w, r, u)
 	ret0, _ := ret[0].(error)

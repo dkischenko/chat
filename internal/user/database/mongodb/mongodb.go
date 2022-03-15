@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dkischenko/chat/internal/user"
+	"github.com/dkischenko/chat/internal/user/models"
 	"github.com/dkischenko/chat/pkg/logger"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -23,7 +24,7 @@ func NewStorage(database *mongo.Database, collection string, logger *logger.Logg
 	}
 }
 
-func (db *mongodb) Create(ctx context.Context, user *user.User) (id string, err error) {
+func (db *mongodb) Create(ctx context.Context, user *models.User) (id string, err error) {
 	result, err := db.collection.InsertOne(ctx, user)
 	if err != nil {
 		db.logger.Entry.Errorf("failed insert data with error: %v", err)
@@ -40,7 +41,7 @@ func (db *mongodb) Create(ctx context.Context, user *user.User) (id string, err 
 	return "", fmt.Errorf("failed to convert objectid to hex with oid: %s", oid)
 }
 
-func (db *mongodb) FindOne(ctx context.Context, username string) (u *user.User, err error) {
+func (db *mongodb) FindOne(ctx context.Context, username string) (u *models.User, err error) {
 	filter := bson.M{"username": username}
 	result := db.collection.FindOne(ctx, filter)
 	if result.Err() != nil {
@@ -58,15 +59,15 @@ func (db *mongodb) FindOne(ctx context.Context, username string) (u *user.User, 
 	return u, nil
 }
 
-func (db *mongodb) UpdateKey(ctx context.Context, user *user.User, key string) (err error) {
+func (db *mongodb) UpdateKey(ctx context.Context, user *models.User, key string) (err error) {
 	panic("Implement me")
 }
 
-func (db *mongodb) FindByUUID(ctx context.Context, uuid string) (u *user.User, err error) {
+func (db *mongodb) FindByUUID(ctx context.Context, uuid string) (u *models.User, err error) {
 	panic("Implement me")
 }
 
-func (db *mongodb) UpdateOnline(ctx context.Context, user *user.User, isOnline bool) (err error) {
+func (db *mongodb) UpdateOnline(ctx context.Context, user *models.User, isOnline bool) (err error) {
 	panic("Implement me")
 }
 
