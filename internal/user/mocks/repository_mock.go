@@ -6,9 +6,9 @@ package mock_user
 
 import (
 	context "context"
-	user "github.com/dkischenko/chat/internal/user/models"
 	reflect "reflect"
 
+	models "github.com/dkischenko/chat/internal/user/models"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -36,7 +36,7 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // Create mocks base method.
-func (m *MockRepository) Create(ctx context.Context, user *user.User) (string, error) {
+func (m *MockRepository) Create(ctx context.Context, user *models.User) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", ctx, user)
 	ret0, _ := ret[0].(string)
@@ -51,10 +51,10 @@ func (mr *MockRepositoryMockRecorder) Create(ctx, user interface{}) *gomock.Call
 }
 
 // FindByUUID mocks base method.
-func (m *MockRepository) FindByUUID(ctx context.Context, uuid string) (*user.User, error) {
+func (m *MockRepository) FindByUUID(ctx context.Context, uuid string) (*models.User, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindByUUID", ctx, uuid)
-	ret0, _ := ret[0].(*user.User)
+	ret0, _ := ret[0].(*models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -65,19 +65,34 @@ func (mr *MockRepositoryMockRecorder) FindByUUID(ctx, uuid interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByUUID", reflect.TypeOf((*MockRepository)(nil).FindByUUID), ctx, uuid)
 }
 
-// FindOne mocks base method.
-func (m *MockRepository) FindOne(ctx context.Context, username string) (*user.User, error) {
+// FindOneMessage mocks base method.
+func (m *MockRepository) FindOneMessage(ctx context.Context, mid int) (*models.Message, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "FindOne", ctx, username)
-	ret0, _ := ret[0].(*user.User)
+	ret := m.ctrl.Call(m, "FindOneMessage", ctx, mid)
+	ret0, _ := ret[0].(*models.Message)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FindOne indicates an expected call of FindOne.
-func (mr *MockRepositoryMockRecorder) FindOne(ctx, username interface{}) *gomock.Call {
+// FindOneMessage indicates an expected call of FindOneMessage.
+func (mr *MockRepositoryMockRecorder) FindOneMessage(ctx, mid interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOne", reflect.TypeOf((*MockRepository)(nil).FindOne), ctx, username)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneMessage", reflect.TypeOf((*MockRepository)(nil).FindOneMessage), ctx, mid)
+}
+
+// FindOneUser mocks base method.
+func (m *MockRepository) FindOneUser(ctx context.Context, username string) (*models.User, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindOneUser", ctx, username)
+	ret0, _ := ret[0].(*models.User)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindOneUser indicates an expected call of FindOneUser.
+func (mr *MockRepositoryMockRecorder) FindOneUser(ctx, username interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindOneUser", reflect.TypeOf((*MockRepository)(nil).FindOneUser), ctx, username)
 }
 
 // GetOnline mocks base method.
@@ -95,8 +110,53 @@ func (mr *MockRepositoryMockRecorder) GetOnline(ctx interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetOnline", reflect.TypeOf((*MockRepository)(nil).GetOnline), ctx)
 }
 
+// GetUnreadMessages mocks base method.
+func (m *MockRepository) GetUnreadMessages(ctx context.Context, u *models.User, unreadMC int) ([]models.Message, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUnreadMessages", ctx, u, unreadMC)
+	ret0, _ := ret[0].([]models.Message)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUnreadMessages indicates an expected call of GetUnreadMessages.
+func (mr *MockRepositoryMockRecorder) GetUnreadMessages(ctx, u, unreadMC interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnreadMessages", reflect.TypeOf((*MockRepository)(nil).GetUnreadMessages), ctx, u, unreadMC)
+}
+
+// GetUnreadMessagesCount mocks base method.
+func (m *MockRepository) GetUnreadMessagesCount(ctx context.Context, u *models.User) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUnreadMessagesCount", ctx, u)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetUnreadMessagesCount indicates an expected call of GetUnreadMessagesCount.
+func (mr *MockRepositoryMockRecorder) GetUnreadMessagesCount(ctx, u interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUnreadMessagesCount", reflect.TypeOf((*MockRepository)(nil).GetUnreadMessagesCount), ctx, u)
+}
+
+// StoreMessage mocks base method.
+func (m *MockRepository) StoreMessage(ctx context.Context, message *models.Message) (int, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "StoreMessage", ctx, message)
+	ret0, _ := ret[0].(int)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// StoreMessage indicates an expected call of StoreMessage.
+func (mr *MockRepositoryMockRecorder) StoreMessage(ctx, message interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StoreMessage", reflect.TypeOf((*MockRepository)(nil).StoreMessage), ctx, message)
+}
+
 // UpdateKey mocks base method.
-func (m *MockRepository) UpdateKey(ctx context.Context, user *user.User, key string) error {
+func (m *MockRepository) UpdateKey(ctx context.Context, user *models.User, key string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateKey", ctx, user, key)
 	ret0, _ := ret[0].(error)
@@ -110,7 +170,7 @@ func (mr *MockRepositoryMockRecorder) UpdateKey(ctx, user, key interface{}) *gom
 }
 
 // UpdateOnline mocks base method.
-func (m *MockRepository) UpdateOnline(ctx context.Context, user *user.User, isOnline bool) error {
+func (m *MockRepository) UpdateOnline(ctx context.Context, user *models.User, isOnline bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateOnline", ctx, user, isOnline)
 	ret0, _ := ret[0].(error)

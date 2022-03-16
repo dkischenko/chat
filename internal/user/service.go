@@ -80,7 +80,7 @@ func (s Service) Create(ctx context.Context, user models.UserDTO) (id string, er
 }
 
 func (s Service) Login(ctx context.Context, dto *models.UserDTO) (u *models.User, err error) {
-	u, err = s.storage.FindOne(ctx, dto.Username)
+	u, err = s.storage.FindOneUser(ctx, dto.Username)
 	if err != nil {
 		s.logger.Entry.Errorf("failed find user with error: %s", err)
 		return nil, fmt.Errorf("error occurs: %w", uerrors.ErrFindOneUser)

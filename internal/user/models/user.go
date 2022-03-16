@@ -6,4 +6,5 @@ type User struct {
 	PasswordHash string `json:"passwordHash" bson:"password"`
 	Key          string `json:"key" bson:"key"`
 	IsOnline     bool   `json:"isOnline" bson:"isOnline"`
+	LastOnline   *int   `json:"lastOnline"`
 }
