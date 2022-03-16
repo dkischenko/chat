@@ -3,13 +3,14 @@ package user
 import (
 	"context"
 	"fmt"
+	"github.com/dkischenko/chat/internal/user/models"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/websocket"
 )
 
-func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *User) error {
+func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *models.User) error {
 	s.Upgrader.CheckOrigin = func(r *http.Request) bool {
 		return true
 	}
@@ -20,6 +21,11 @@ func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u
 	}
 	s.clientAdd(connection)
 	log.Printf("%s goes online.", u.Username)
+	s.logger.Entry.Infof("%s goes online.", u.Username)
+	err = s.storage.UpdateOnline(r.Context(), u, true)
+	if err != nil {
+		s.logger.Entry.Errorf("Error with update online status: %s", err)
+	}
 	if err = s.reader(connection, r.Context(), u); err != nil {
 		s.logger.Entry.Errorf("%s", err)
 	}
@@ -31,7 +37,7 @@ func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u
 	return nil
 }
 
-func (s *Service) reader(conn *websocket.Conn, ctx context.Context, u *User) (err error) {
+func (s *Service) reader(conn *websocket.Conn, ctx context.Context, u *models.User) (err error) {
 	for {
 		messageType, p, err := conn.ReadMessage()
 		if err != nil || messageType == websocket.CloseMessage {
@@ -39,10 +45,6 @@ func (s *Service) reader(conn *websocket.Conn, ctx context.Context, u *User) (er
 			log.Printf("<%s> left chat", u.Username)
 			s.logger.Entry.Errorf("Error with update online status: %s", err)
 			return fmt.Errorf("received error: %s", err)
-		}
-		err = s.storage.UpdateOnline(ctx, u, true)
-		if err != nil {
-			s.logger.Entry.Errorf("Error with update online status: %s", err)
 		}
 
 		s.rwMutex.RLock()

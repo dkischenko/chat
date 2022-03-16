@@ -1,4 +1,4 @@
-package user
+package models
 
 type UserDTO struct {
 	Username string `json:"userName" validate:"required,lowercase,alpha"`

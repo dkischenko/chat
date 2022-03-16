@@ -6,9 +6,9 @@ package mock_user
 
 import (
 	context "context"
+	user "github.com/dkischenko/chat/internal/user/models"
 	reflect "reflect"
 
-	user "github.com/dkischenko/chat/internal/user"
 	gomock "github.com/golang/mock/gomock"
 )
 

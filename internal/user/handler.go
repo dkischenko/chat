@@ -6,6 +6,7 @@ import (
 	"github.com/dkischenko/chat/internal/config"
 	uerrors "github.com/dkischenko/chat/internal/errors"
 	"github.com/dkischenko/chat/internal/middleware"
+	"github.com/dkischenko/chat/internal/user/models"
 	"github.com/dkischenko/chat/pkg/logger"
 	"github.com/go-playground/validator/v10"
 	"net/http"
@@ -56,7 +57,7 @@ func (h handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// @todo: refactor validation to service
-	uDTO := &UserDTO{}
+	uDTO := &models.UserDTO{}
 	err := json.NewDecoder(r.Body).Decode(uDTO)
 
 	if err != nil {
@@ -114,7 +115,7 @@ func (h handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// @todo: refactor validation to service
-	uDTO := &UserDTO{}
+	uDTO := &models.UserDTO{}
 	err := json.NewDecoder(r.Body).Decode(uDTO)
 
 	if err != nil {

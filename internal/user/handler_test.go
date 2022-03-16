@@ -6,6 +6,7 @@ import (
 	"github.com/dkischenko/chat/internal/config"
 	"github.com/dkischenko/chat/internal/user"
 	mock_user "github.com/dkischenko/chat/internal/user/mocks"
+	"github.com/dkischenko/chat/internal/user/models"
 	"github.com/dkischenko/chat/pkg/auth"
 	"github.com/dkischenko/chat/pkg/hasher"
 	"github.com/dkischenko/chat/pkg/logger"
@@ -26,7 +27,7 @@ func TestHandler_RegisterOk(t *testing.T) {
 
 		var (
 			ctx  = context.Background()
-			uDTO = user.UserDTO{
+			uDTO = models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
@@ -59,7 +60,7 @@ func TestHandler_CreateUserOk(t *testing.T) {
 
 		var (
 			ctx  = context.Background()
-			uDTO = user.UserDTO{
+			uDTO = models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
@@ -90,7 +91,7 @@ func TestHandler_CreateUserWrongHttpMethod(t *testing.T) {
 
 		var (
 			ctx  = context.Background()
-			uDTO = user.UserDTO{
+			uDTO = models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
@@ -121,7 +122,7 @@ func TestHandler_CreateUserWrongJson(t *testing.T) {
 
 		var (
 			ctx  = context.Background()
-			uDTO = user.UserDTO{
+			uDTO = models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
@@ -152,7 +153,7 @@ func TestHandler_CreateUserWrongUserData(t *testing.T) {
 
 		var (
 			ctx  = context.Background()
-			uDTO = user.UserDTO{
+			uDTO = models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
@@ -183,12 +184,12 @@ func TestHandler_LoginUserOk(t *testing.T) {
 		hash, _ := hasher.HashPassword("password")
 		var (
 			ctx  = context.Background()
-			uDTO = &user.UserDTO{
+			uDTO = &models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
 			getUUID = uuid.GetUUID()
-			u       = &user.User{
+			u       = &models.User{
 				ID:           getUUID,
 				Username:     "bill",
 				PasswordHash: hash,
@@ -221,12 +222,12 @@ func TestHandler_LoginUserWrongHttpMethod(t *testing.T) {
 		hash, _ := hasher.HashPassword("password")
 		var (
 			ctx  = context.Background()
-			uDTO = &user.UserDTO{
+			uDTO = &models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
 			getUUID = uuid.GetUUID()
-			u       = &user.User{
+			u       = &models.User{
 				ID:           getUUID,
 				Username:     "bill",
 				PasswordHash: hash,
@@ -259,12 +260,12 @@ func TestHandler_LoginWrongJson(t *testing.T) {
 		hash, _ := hasher.HashPassword("password")
 		var (
 			ctx  = context.Background()
-			uDTO = &user.UserDTO{
+			uDTO = &models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
 			getUUID = uuid.GetUUID()
-			u       = &user.User{
+			u       = &models.User{
 				ID:           getUUID,
 				Username:     "bill",
 				PasswordHash: hash,
@@ -297,12 +298,12 @@ func TestHandler_LoginUserWrongUserData(t *testing.T) {
 		hash, _ := hasher.HashPassword("password")
 		var (
 			ctx  = context.Background()
-			uDTO = &user.UserDTO{
+			uDTO = &models.UserDTO{
 				Username: "bill",
 				Password: "password",
 			}
 			getUUID = uuid.GetUUID()
-			u       = &user.User{
+			u       = &models.User{
 				ID:           getUUID,
 				Username:     "bill",
 				PasswordHash: hash,
@@ -399,7 +400,7 @@ func TestHandler_ChatStartOk(t *testing.T) {
 		uid := uuid.GetUUID()
 		var (
 			ctx = context.Background()
-			u   = &user.User{
+			u   = &models.User{
 				ID:           uid,
 				Username:     "bill",
 				PasswordHash: hash,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dkischenko/chat/internal/user/models"
 	"testing"
 	"time"
 
@@ -30,13 +31,13 @@ func TestService_Create(t *testing.T) {
 	testCases := []struct {
 		name      string
 		ctx       context.Context
-		user      *user.UserDTO
+		user      *models.UserDTO
 		wantError bool
 	}{
 		{
 			name: "OK case",
 			ctx:  context.Background(),
-			user: &user.UserDTO{
+			user: &models.UserDTO{
 				Username: "Bill",
 				Password: "password",
 			},
@@ -45,7 +46,7 @@ func TestService_Create(t *testing.T) {
 		{
 			name: "Empty password (skip)",
 			ctx:  context.Background(),
-			user: &user.UserDTO{
+			user: &models.UserDTO{
 				Username: "Bill",
 				Password: "",
 			},
@@ -54,7 +55,7 @@ func TestService_Create(t *testing.T) {
 		{
 			name: "Empty name",
 			ctx:  context.Background(),
-			user: &user.UserDTO{
+			user: &models.UserDTO{
 				Username: "",
 				Password: "password",
 			},
@@ -89,7 +90,7 @@ func TestService_Create(t *testing.T) {
 				t.Errorf("Unexpected error: %s", err)
 			}
 
-			u := &user.User{
+			u := &models.User{
 				Username:     tcase.user.Username,
 				PasswordHash: hash,
 			}
@@ -117,7 +118,7 @@ func TestService_CreateUsernameErr(t *testing.T) {
 
 		l, _ := logger.GetLogger()
 		ctx := context.Background()
-		uDTO := user.UserDTO{
+		uDTO := models.UserDTO{
 			Username: "",
 			Password: "password",
 		}
@@ -143,7 +144,7 @@ func TestService_CreateError(t *testing.T) {
 
 		l, _ := logger.GetLogger()
 		ctx := context.Background()
-		uDTO := user.UserDTO{
+		uDTO := models.UserDTO{
 			Username: "Bob",
 			Password: "password",
 		}
@@ -172,12 +173,12 @@ func TestService_Login(t *testing.T) {
 		hash, _ := hasher.HashPassword("password")
 		uId := uuid.GetUUID()
 		mockRepo := mock_user.NewMockRepository(ctrl)
-		uDTO := &user.UserDTO{
+		uDTO := &models.UserDTO{
 			Username: "Bob",
 			Password: "password",
 		}
 		mockRepo.EXPECT().
-			FindOne(ctx, uDTO.Username).Return(&user.User{
+			FindOne(ctx, uDTO.Username).Return(&models.User{
 			ID:           uId,
 			Username:     uDTO.Username,
 			PasswordHash: hash,
@@ -215,7 +216,7 @@ func TestService_LoginFindOneError(t *testing.T) {
 
 		l, _ := logger.GetLogger()
 		s := user.NewService(l, mockRepo, 3600)
-		uDTO := &user.UserDTO{
+		uDTO := &models.UserDTO{
 			Username: "Bob",
 			Password: "password",
 		}
@@ -256,7 +257,7 @@ func TestService_FindByUUID(t *testing.T) {
 
 			l, _ := logger.GetLogger()
 			mockRepo := mock_user.NewMockRepository(ctrl)
-			mockRepo.EXPECT().FindByUUID(test.ctx, gomock.Any()).Return(&user.User{
+			mockRepo.EXPECT().FindByUUID(test.ctx, gomock.Any()).Return(&models.User{
 				ID:           test.uid,
 				Username:     "Bob",
 				PasswordHash: "$2a$10$gYb3GF0v.o8ycTS3ClIDkOMSjojOazFMVRiwAqh5IXLHhDo4/iQJO",
@@ -301,13 +302,13 @@ func TestService_RevokeToken(t *testing.T) {
 	testCases := []struct {
 		name      string
 		ctx       context.Context
-		u         *user.User
+		u         *models.User
 		wantError bool
 	}{
 		{
 			name: "Ok",
 			ctx:  context.Background(),
-			u: &user.User{
+			u: &models.User{
 				ID:           "ce34e740-3f08-4292-964f-6f4ad096f8bc",
 				Username:     "Bob",
 				PasswordHash: "$2a$10$4nCeWqjuHWH9WtbaQArWkODCbSZNe9kDlmrwGY61dLMdi/5r3/G8K",
@@ -319,7 +320,7 @@ func TestService_RevokeToken(t *testing.T) {
 		{
 			name: "Ok",
 			ctx:  context.Background(),
-			u: &user.User{
+			u: &models.User{
 				ID:           "ce34e740-3f08-4292-964f-6f4ad096f8bc",
 				Username:     "Bob",
 				PasswordHash: "$2a$10$4nCeWqjuHWH9WtbaQArWkODCbSZNe9kDlmrwGY61dLMdi/5r3/G8K",
@@ -350,7 +351,7 @@ func TestService_RevokeTokenFalse(t *testing.T) {
 		ctrl := gomock.NewController(t)
 		defer ctrl.Finish()
 		ctx := context.Background()
-		u := &user.User{
+		u := &models.User{
 			ID:           "ce34e740-3f08-4292-964f-6f4ad096f8bc",
 			Username:     "Bob",
 			PasswordHash: "$2a$10$4nCeWqjuHWH9WtbaQArWkODCbSZNe9kDlmrwGY61dLMdi/5r3/G8K",
@@ -416,7 +417,7 @@ func TestService_ChatStartOk(t *testing.T) {
 
 		ctx := context.Background()
 		httpStatusCode := 200
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
@@ -461,7 +462,7 @@ func TestService_ChatStartParseTokenError(t *testing.T) {
 
 		ctx := context.Background()
 		httpStatusCode := 400
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
@@ -494,7 +495,7 @@ func TestService_ChatStartFindByUIIDError(t *testing.T) {
 
 		ctx := context.Background()
 		httpStatusCode := 400
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
@@ -528,7 +529,7 @@ func TestService_ChatStartUserKeyEmptyError(t *testing.T) {
 
 		ctx := context.Background()
 		httpStatusCode := 400
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
@@ -563,7 +564,7 @@ func TestService_ChatStartRevokeTokenError(t *testing.T) {
 
 		ctx := context.Background()
 		httpStatusCode := 500
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
@@ -602,7 +603,7 @@ func TestService_CreateTokenOk(t *testing.T) {
 		defer ctrl.Finish()
 
 		ctx := context.Background()
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
@@ -637,7 +638,7 @@ func TestService_CreateTokenUpdateKeyErr(t *testing.T) {
 		defer ctrl.Finish()
 
 		ctx := context.Background()
-		usr := &user.User{
+		usr := &models.User{
 			ID:           uuid.GetUUID(),
 			Username:     "Bob",
 			PasswordHash: hash,
