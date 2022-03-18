@@ -40,7 +40,7 @@ func (db *postgres) StoreMessage(ctx context.Context, message *models.Message) (
 
 	if err != nil {
 		db.logger.Entry.Error(err)
-		return 0, fmt.Errorf("Error occurs: %s. %s", err, uerrors.ErrCreateMessage)
+		return 0, fmt.Errorf("Error occurs: %w. %w", err, uerrors.ErrCreateMessage)
 	}
 
 	return message.ID, nil
@@ -63,7 +63,6 @@ func (db *postgres) GetUnreadMessagesCount(ctx context.Context, u *models.User) 
 }
 
 func (db *postgres) GetUnreadMessages(ctx context.Context, u *models.User, unreadMC int) (messages []models.Message, err error) {
-	var mSlice = make([]models.Message, 0, unreadMC)
 	q := `
 		SELECT id, text, u_from, created_at
 		FROM messages
@@ -74,6 +73,7 @@ func (db *postgres) GetUnreadMessages(ctx context.Context, u *models.User, unrea
 		db.logger.Entry.Error(err)
 		return nil, err
 	}
+	var mSlice = make([]models.Message, 0, unreadMC)
 	for mRows.Next() {
 		var m models.Message
 		err := mRows.Scan(&m.ID, &m.Text, &m.UFrom, &m.CreatedAt)
@@ -102,7 +102,7 @@ func (db *postgres) Create(ctx context.Context, user *models.User) (id string, e
 	err = db.pool.QueryRow(ctx, formatQuery(q), user.Username, user.PasswordHash).Scan(&user.ID)
 	if err != nil {
 		db.logger.Entry.Error(err)
-		return "", fmt.Errorf("Error occurs: %s. %s", err, uerrors.ErrCreateUser)
+		return "", fmt.Errorf("Error occurs: %w. %w", err, uerrors.ErrCreateUser)
 	}
 	return user.ID, nil
 }

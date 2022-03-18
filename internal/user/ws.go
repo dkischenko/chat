@@ -4,11 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/dkischenko/chat/internal/user/models"
-	"log"
-	"net/http"
-	"sync"
-
 	"github.com/gorilla/websocket"
+	"net/http"
 )
 
 func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u *models.User) error {
@@ -18,10 +15,9 @@ func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u
 
 	connection, err := s.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		s.logger.Entry.Errorf("WS connection error: %s", err)
+		s.logger.Entry.Errorf("WS connection error: %w", err)
 	}
 	s.clientAdd(connection)
-	log.Printf("%s goes online.", u.Username)
 	s.logger.Entry.Infof("%s goes online.", u.Username)
 	err = s.storage.UpdateOnline(r.Context(), u, true)
 	if err != nil {
@@ -63,49 +59,76 @@ func (s *Service) InitSocketConnection(w http.ResponseWriter, r *http.Request, u
 
 func (s *Service) reader(conn *websocket.Conn, ctx context.Context, u *models.User) (err error) {
 	for {
-		messageType, p, err := conn.ReadMessage()
-		if err != nil || messageType == websocket.CloseMessage {
-			err = s.storage.UpdateOnline(ctx, u, false)
-			log.Printf("<%s> left chat", u.Username)
-			s.logger.Entry.Errorf("Error with update online status: %w", err)
-			return fmt.Errorf("received error: %w", err)
+		var (
+			mes         = make(chan []byte, 1)
+			errs        = make(chan error, 1)
+			closeWS     = make(chan bool, 1)
+			messageType int
+			p           []byte
+			err         error
+		)
+		go func() {
+			messageType, p, err = conn.ReadMessage()
+			if messageType == websocket.CloseMessage || err != nil {
+				err = s.storage.UpdateOnline(ctx, u, false)
+				if err != nil {
+					s.logger.Entry.Errorf("Error with update online status: %w", err)
+					errs <- fmt.Errorf("received error: %w", err)
+				} else {
+					s.logger.Entry.Printf("<%s> left chat", u.Username)
+					closeWS <- true
+				}
+			}
+
+			mes <- p
+
+			close(closeWS)
+			close(mes)
+			close(errs)
+		}()
+
+		if cWS := <-closeWS; cWS {
+			return nil
+		}
+
+		if err, ok := <-errs; ok {
+			return err
 		}
 
 		s.rwMutex.RLock()
 		defer s.rwMutex.RUnlock()
-		var wg sync.WaitGroup
 
-		msg := &models.Message{
-			Text:  string(p),
-			UFrom: u.ID,
+		if m, ok := <-mes; ok {
+			s.handleMessages(ctx, m, u, conn)
 		}
-		mid, err := s.storage.StoreMessage(ctx, msg)
-		if err != nil {
-			s.logger.Entry.Errorf("Error with store message: %s", err)
-		}
-
-		m, err := s.storage.FindOneMessage(ctx, mid)
-		if err != nil {
-			s.logger.Entry.Errorf("Error with getting message: %s", err)
-		}
-
-		for connKey := range s.clients {
-			wg.Add(1)
-			go func(connKey *websocket.Conn, m *models.Message) {
-				defer wg.Done()
-				if conn != connKey {
-					//log.Printf("<%s>: %s", u.Username, m.Text)
-					err = connKey.WriteJSON(m)
-					if err != nil {
-						s.logger.Entry.Errorf("Error with sending message: %s", err)
-					}
-				}
-			}(connKey, m)
-		}
-		wg.Wait()
 
 		if err := conn.WriteMessage(messageType, p); err != nil {
-			return fmt.Errorf("received error: %s", err)
+			return fmt.Errorf("received error: %w", err)
+		}
+	}
+}
+
+func (s Service) handleMessages(ctx context.Context, m []byte, u *models.User, conn *websocket.Conn) {
+	msg := &models.Message{
+		Text:  string(m),
+		UFrom: u.ID,
+	}
+	mid, err := s.storage.StoreMessage(ctx, msg)
+	if err != nil {
+		s.logger.Entry.Errorf("Error with store message: %w", err)
+	}
+
+	mDB, err := s.storage.FindOneMessage(ctx, mid)
+	if err != nil {
+		s.logger.Entry.Errorf("Error with getting message: %w", err)
+	}
+
+	for connKey := range s.clients {
+		if conn != connKey {
+			err = connKey.WriteJSON(mDB)
+			if err != nil {
+				s.logger.Entry.Errorf("Error with sending message: %w", err)
+			}
 		}
 	}
 }
