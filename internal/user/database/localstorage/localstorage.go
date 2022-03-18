@@ -47,7 +47,7 @@ func (ls *localstorage) FindOne(ctx context.Context, username string) (u *models
 }
 
 func (ls *localstorage) FindAll(ctx context.Context) (u []*models.User, err error) {
-	if len(ls.users) < 0 {
+	if len(ls.users) == 0 {
 		ls.logger.Entry.Error(uerrors.ErrUserNotFound)
 		return nil, uerrors.ErrUserNotFound
 	}
@@ -68,4 +68,29 @@ func (ls *localstorage) UpdateOnline(ctx context.Context, user *models.User, isO
 
 func (ls *localstorage) GetOnline(ctx context.Context) (count int, err error) {
 	panic("Implement me")
+}
+
+func (ls *localstorage) StoreMessage(ctx context.Context, message *models.Message) (id int, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ls *localstorage) GetUnreadMessages(ctx context.Context, u *models.User, unreadMC int) (messages []models.Message, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ls *localstorage) GetUnreadMessagesCount(ctx context.Context, u *models.User) (count int, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ls *localstorage) FindOneUser(ctx context.Context, username string) (u *models.User, err error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (ls *localstorage) FindOneMessage(ctx context.Context, mid int) (m *models.Message, err error) {
+	//TODO implement me
+	panic("implement me")
 }

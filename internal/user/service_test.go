@@ -178,7 +178,7 @@ func TestService_Login(t *testing.T) {
 			Password: "password",
 		}
 		mockRepo.EXPECT().
-			FindOne(ctx, uDTO.Username).Return(&models.User{
+			FindOneUser(ctx, uDTO.Username).Return(&models.User{
 			ID:           uId,
 			Username:     uDTO.Username,
 			PasswordHash: hash,
@@ -186,7 +186,7 @@ func TestService_Login(t *testing.T) {
 			IsOnline:     false,
 		}, nil).AnyTimes()
 		service := user.NewService(l, mockRepo, 3600)
-		u, err := mockRepo.FindOne(ctx, uDTO.Username)
+		u, err := mockRepo.FindOneUser(ctx, uDTO.Username)
 		if err != nil {
 			t.Fatalf("Can't find user with credentials due error: %s", err)
 		}
@@ -211,7 +211,7 @@ func TestService_LoginFindOneError(t *testing.T) {
 		ctx := context.Background()
 		mockRepo := mock_user.NewMockRepository(ctrl)
 		mockRepo.EXPECT().
-			FindOne(ctx, "Bob").
+			FindOneUser(ctx, "Bob").
 			Return(nil, fmt.Errorf("Error occurs: %w", uerrors.ErrFindOneUser)).AnyTimes()
 
 		l, _ := logger.GetLogger()

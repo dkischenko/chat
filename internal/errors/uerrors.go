@@ -8,6 +8,7 @@ var (
 	ErrRevokeToken           = errors.New("error with revoke token")
 	ErrEmptyUsername         = errors.New("username can't be empty")
 	ErrCreateUser            = errors.New("error with creating user due a database issue")
+	ErrCreateMessage         = errors.New("error with creating message due a database issue")
 	ErrFindOneUser           = errors.New("error with finding user")
 	ErrCheckUserPasswordHash = errors.New("error with using wrong password")
 	ErrFindUserByUIID        = errors.New("error with finding user by UIID")
