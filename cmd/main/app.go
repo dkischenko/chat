@@ -12,8 +12,20 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	_ "github.com/swaggo/swag/example/celler/docs"
 )
 
+// @title            Fancy Golang chat
+// @version          1.0.0
+// @description      Just a simple chat service
+// @license.name     Apache 2.0
+// @license.url      http://www.apache.org/licenses/LICENSE-2.0.html
+// @BasePath         /v1
+// @tag.name         user
+// @tag.description  Operations about user
+// @tag.name         chat
+// @tag.description  Operations about chat
 func main() {
 	l, err := logger.GetLogger()
 	if err != nil {

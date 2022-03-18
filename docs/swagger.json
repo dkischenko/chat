@@ -1,0 +1,166 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "Just a simple chat service",
+        "title": "Fancy Golang chat",
+        "contact": {},
+        "license": {
+            "name": "Apache 2.0",
+            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+        },
+        "version": "1.0.0"
+    },
+    "basePath": "/v1",
+    "paths": {
+        "/chat/ws.rtm.start": {
+            "get": {
+                "tags": [
+                    "chat"
+                ],
+                "summary": "Endpoint to start real time chat",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "One time token for a logged user",
+                        "name": "token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Upgrade to websocket protocol"
+                    },
+                    "400": {
+                        "description": "Invalid token"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/user": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Register(create) user",
+                "responses": {
+                    "200": {
+                        "description": "user created",
+                        "schema": {
+                            "$ref": "#/definitions/models.UserDTO"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request, empty username or id"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/user/active": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Number of active users in a chat",
+                "responses": {
+                    "200": {
+                        "description": "successful operation, returns number of active users",
+                        "schema": {
+                            "$ref": "#/definitions/user.UserOnlineResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/user/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Logs user into the system",
+                "responses": {
+                    "200": {
+                        "description": "successful operation, returns link to join chat",
+                        "schema": {
+                            "$ref": "#/definitions/user.UserLoginResponse"
+                        },
+                        "headers": {
+                            "X-Expires-After": {
+                                "type": "string",
+                                "description": "date in UTC when token expires"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid username/password"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.UserDTO": {
+            "type": "object",
+            "required": [
+                "password",
+                "userName"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string",
+                    "example": "password"
+                },
+                "userName": {
+                    "type": "string",
+                    "example": "userName"
+                }
+            }
+        },
+        "user.UserLoginResponse": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "ws://fancy-chat.io/ws\u0026token=one-time-token"
+                }
+            }
+        },
+        "user.UserOnlineResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer",
+                    "example": 0
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "description": "Operations about user",
+            "name": "user"
+        },
+        {
+            "description": "Operations about chat",
+            "name": "chat"
+        }
+    ]
+}

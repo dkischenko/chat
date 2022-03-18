@@ -1,0 +1,107 @@
+basePath: /v1
+definitions:
+  models.UserDTO:
+    properties:
+      password:
+        example: password
+        type: string
+      userName:
+        example: userName
+        type: string
+    required:
+    - password
+    - userName
+    type: object
+  user.UserLoginResponse:
+    properties:
+      url:
+        example: ws://fancy-chat.io/ws&token=one-time-token
+        type: string
+    type: object
+  user.UserOnlineResponse:
+    properties:
+      count:
+        example: 0
+        type: integer
+    type: object
+info:
+  contact: {}
+  description: Just a simple chat service
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Fancy Golang chat
+  version: 1.0.0
+paths:
+  /chat/ws.rtm.start:
+    get:
+      parameters:
+      - description: One time token for a logged user
+        in: query
+        name: token
+        required: true
+        type: string
+      responses:
+        "101":
+          description: Upgrade to websocket protocol
+        "400":
+          description: Invalid token
+        "500":
+          description: Internal Server Error
+      summary: Endpoint to start real time chat
+      tags:
+      - chat
+  /user:
+    post:
+      consumes:
+      - application/json
+      responses:
+        "200":
+          description: user created
+          schema:
+            $ref: '#/definitions/models.UserDTO'
+        "400":
+          description: Bad request, empty username or id
+        "500":
+          description: Internal Server Error
+      summary: Register(create) user
+      tags:
+      - user
+  /user/active:
+    get:
+      responses:
+        "200":
+          description: successful operation, returns number of active users
+          schema:
+            $ref: '#/definitions/user.UserOnlineResponse'
+        "500":
+          description: Internal Server Error
+      summary: Number of active users in a chat
+      tags:
+      - user
+  /user/login:
+    post:
+      consumes:
+      - application/json
+      responses:
+        "200":
+          description: successful operation, returns link to join chat
+          headers:
+            X-Expires-After:
+              description: date in UTC when token expires
+              type: string
+          schema:
+            $ref: '#/definitions/user.UserLoginResponse'
+        "400":
+          description: Invalid username/password
+        "500":
+          description: Internal Server Error
+      summary: Logs user into the system
+      tags:
+      - user
+swagger: "2.0"
+tags:
+- description: Operations about user
+  name: user
+- description: Operations about chat
+  name: chat
