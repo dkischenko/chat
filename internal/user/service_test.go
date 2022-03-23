@@ -4,7 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/dkischenko/chat/internal/config"
+	database "github.com/dkischenko/chat/internal/user/database/postgres"
 	"github.com/dkischenko/chat/internal/user/models"
+	"github.com/dkischenko/chat/pkg/database/postgres"
+	"os"
+	"sync"
 	"testing"
 	"time"
 
@@ -664,4 +669,82 @@ func TestService_CreateTokenUpdateKeyErr(t *testing.T) {
 			t.Fatal("Unexpected error.")
 		}
 	})
+}
+
+func BenchmarkService_Login(b *testing.B) {
+	var (
+		ctx  = context.Background()
+		uDTO = &models.UserDTO{
+			Username: "bill",
+			Password: "password",
+		}
+	)
+
+	var cfg *config.Config
+
+	configPath := os.Getenv("CONFIG")
+	var once sync.Once
+	once.Do(func() {
+		cfg = config.GetConfig(configPath, &config.Config{})
+	})
+
+	l, err := logger.GetLogger()
+	if err != nil {
+		panic(err)
+	}
+
+	accessTokenTTL, err := time.ParseDuration(cfg.Auth.AccessTokenTTL)
+	if err != nil {
+		panic(err)
+	}
+
+	client, err := postgres.NewClient(context.Background(), cfg.Storage.Host, cfg.Storage.Port, cfg.Storage.Username,
+		cfg.Storage.Password, cfg.Storage.Database)
+	if err != nil {
+		panic(err)
+	}
+	storage := database.NewStorage(client, l)
+
+	s := user.NewService(l, storage, accessTokenTTL)
+
+	for i := 0; i < b.N; i++ {
+		_, _ = s.Login(ctx, uDTO)
+	}
+}
+
+func BenchmarkService_FindByUUID(b *testing.B) {
+	var (
+		ctx = context.Background()
+	)
+
+	var cfg *config.Config
+
+	configPath := os.Getenv("CONFIG")
+	var once sync.Once
+	once.Do(func() {
+		cfg = config.GetConfig(configPath, &config.Config{})
+	})
+
+	l, err := logger.GetLogger()
+	if err != nil {
+		panic(err)
+	}
+
+	accessTokenTTL, err := time.ParseDuration(cfg.Auth.AccessTokenTTL)
+	if err != nil {
+		panic(err)
+	}
+
+	client, err := postgres.NewClient(context.Background(), cfg.Storage.Host, cfg.Storage.Port, cfg.Storage.Username,
+		cfg.Storage.Password, cfg.Storage.Database)
+	if err != nil {
+		panic(err)
+	}
+	storage := database.NewStorage(client, l)
+
+	s := user.NewService(l, storage, accessTokenTTL)
+
+	for i := 0; i < b.N; i++ {
+		_, _ = s.FindByUUID(ctx, "e103da7d-5336-422c-abb5-a2d2d26c1786")
+	}
 }
