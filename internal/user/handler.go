@@ -50,6 +50,14 @@ func (h handler) Register(router *http.ServeMux) {
 	router.Handle(chatUrl, middleware.PanicAndRecover(middleware.Logging(chatStartHandler, h.logger), h.logger))
 }
 
+// CreateUser godoc
+// @Summary  Register(create) user
+// @Tags     user
+// @Accept   json
+// @Success  200  {object}  models.UserDTO  "user created"
+// @Failure  400  {object}  nil             "Bad request, empty username or id"
+// @Failure  500    {object}  nil     "Internal Server Error"
+// @Router   /user [post]
 func (h handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	code := h.isPost(r)
 	if code > 0 {
@@ -108,6 +116,15 @@ func (h handler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	h.logger.Entry.Infof("create user %+v", uDTO)
 }
 
+// LoginUser godoc
+// @Summary  Logs user into the system
+// @Tags     user
+// @Accept   json
+// @Success  200  {object}  user.UserLoginResponse  "successful operation, returns link to join chat"
+// @Header   200  {string}  X-Expires-After         "date in UTC when token expires"
+// @Failure  400  {object}  nil                     "Invalid username/password"
+// @Failure  500  {object}  nil                     "Internal Server Error"
+// @Router   /user/login [post]
 func (h handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	code := h.isPost(r)
 	if code > 0 {
@@ -173,6 +190,12 @@ func (h handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 	h.logger.Entry.Infof("user sussesfully logged in")
 }
 
+// ActiveUser godoc
+// @Summary  Number of active users in a chat
+// @Tags     user
+// @Success  200  {object}  user.UserOnlineResponse  "successful operation, returns number of active users"
+// @Failure  500  {object}  nil                      "Internal Server Error"
+// @Router   /user/active [get]
 func (h handler) ActiveUser(w http.ResponseWriter, r *http.Request) {
 	code := h.isGet(r)
 	if code > 0 {
@@ -197,6 +220,14 @@ func (h handler) ActiveUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ChatStart godoc
+// @Summary  Endpoint to start real time chat
+// @Tags     chat
+// @Param    token  query     string  true  "One time token for a logged user"
+// @Failure  101    {object}  nil     "Upgrade to websocket protocol"
+// @Failure  400    {object}  nil     "Invalid token"
+// @Failure  500  {object}  nil             "Internal Server Error"
+// @Router   /chat/ws.rtm.start [get]
 func (h handler) ChatStart(w http.ResponseWriter, r *http.Request) {
 	httpStatusCode := h.isGet(r)
 	if httpStatusCode > 0 {

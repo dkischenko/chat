@@ -6,9 +6,9 @@ type UserCreateResponse struct {
 }
 
 type UserLoginResponse struct {
-	Url string `json:"url"`
+	Url string `json:"url" example:"ws://fancy-chat.io/ws&token=one-time-token"`
 }
 
 type UserOnlineResponse struct {
-	Count int `json:"count"`
+	Count int `json:"count" example:"0"`
 }
