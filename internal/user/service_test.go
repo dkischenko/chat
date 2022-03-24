@@ -9,7 +9,6 @@ import (
 	"github.com/dkischenko/chat/internal/user/models"
 	"github.com/dkischenko/chat/pkg/database/postgres"
 	"os"
-	"sync"
 	"testing"
 	"time"
 
@@ -683,10 +682,7 @@ func BenchmarkService_Login(b *testing.B) {
 	var cfg *config.Config
 
 	configPath := os.Getenv("CONFIG")
-	var once sync.Once
-	once.Do(func() {
-		cfg = config.GetConfig(configPath, &config.Config{})
-	})
+	cfg = config.GetConfig(configPath, &config.Config{})
 
 	l, err := logger.GetLogger()
 	if err != nil {
@@ -708,7 +704,10 @@ func BenchmarkService_Login(b *testing.B) {
 	s := user.NewService(l, storage, accessTokenTTL)
 
 	for i := 0; i < b.N; i++ {
-		_, _ = s.Login(ctx, uDTO)
+		_, err = s.Login(ctx, uDTO)
+		if err != nil {
+			l.Entry.Fatal(err)
+		}
 	}
 }
 
@@ -720,10 +719,7 @@ func BenchmarkService_FindByUUID(b *testing.B) {
 	var cfg *config.Config
 
 	configPath := os.Getenv("CONFIG")
-	var once sync.Once
-	once.Do(func() {
-		cfg = config.GetConfig(configPath, &config.Config{})
-	})
+	cfg = config.GetConfig(configPath, &config.Config{})
 
 	l, err := logger.GetLogger()
 	if err != nil {
@@ -745,6 +741,9 @@ func BenchmarkService_FindByUUID(b *testing.B) {
 	s := user.NewService(l, storage, accessTokenTTL)
 
 	for i := 0; i < b.N; i++ {
-		_, _ = s.FindByUUID(ctx, "e103da7d-5336-422c-abb5-a2d2d26c1786")
+		_, err = s.FindByUUID(ctx, "e103da7d-5336-422c-abb5-a2d2d26c1786")
+		if err != nil {
+			l.Entry.Fatal(err)
+		}
 	}
 }
