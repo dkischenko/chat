@@ -45,17 +45,13 @@ func (h handler) Register(router *http.ServeMux) {
 	activeUserHandler := http.HandlerFunc(h.ActiveUser)
 	chatStartHandler := http.HandlerFunc(h.ChatStart)
 	router.Handle(userUrl, middleware.PanicAndRecover(
-		middleware.ProfilingMemory(
-			middleware.Logging(createUserHandler, h.logger), h.logger), h.logger))
+		middleware.Logging(createUserHandler, h.logger), h.logger))
 	router.Handle(userLoginUrl, middleware.PanicAndRecover(
-		middleware.ProfilingMemory(
-			middleware.Logging(loginUserHandler, h.logger), h.logger), h.logger))
+		middleware.Logging(loginUserHandler, h.logger), h.logger))
 	router.Handle(userActive, middleware.PanicAndRecover(
-		middleware.ProfilingMemory(
-			middleware.Logging(activeUserHandler, h.logger), h.logger), h.logger))
+		middleware.Logging(activeUserHandler, h.logger), h.logger))
 	router.Handle(chatUrl, middleware.PanicAndRecover(
-		middleware.ProfilingMemory(
-			middleware.Logging(chatStartHandler, h.logger), h.logger), h.logger))
+		middleware.Logging(chatStartHandler, h.logger), h.logger))
 }
 
 // CreateUser godoc
