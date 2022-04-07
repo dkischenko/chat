@@ -1,5 +1,6 @@
 .idea
 .vscode
+.env
 logs
 config.yml
 *.jpeg
