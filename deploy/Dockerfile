@@ -14,6 +14,12 @@ COPY go.sum /usr/local/go/src/app/
 
 RUN go mod download
 
+# Added test
+ARG SIGNINKEY=sdfsdfs#$@2342
+ARG CONFIG=/usr/local/go/src/app/config.yml
+ARG CHATLOGPATH=/usr/local/go/src/app/logs/
+RUN go test -v /usr/local/go/src/app/internal/user
+
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -o /app /usr/local/go/src/app/cmd/main/app.go
 
